@@ -68,7 +68,7 @@ private:
     /**
      * handle limit order registration
      */
-    void matchLimit(const Order &order);
+    bool matchLimit(const Order &order);
 
     /**
      * handle order limit order cancelation

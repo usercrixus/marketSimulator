@@ -30,7 +30,7 @@ int OrderBook::matchMarket(const Order &order)
         return matchMarketAgainst(order, _bids);
 }
 
-void OrderBook::matchLimit(const Order &order)
+bool OrderBook::matchLimit(const Order &order)
 {
     if (order.quantity > 0 && ((order.side == Order::Side::BUY && order.price > _asks.begin()->price || (order.side == Order::Side::BUY && order.price > _bids.begin()->price))))
     {
@@ -39,7 +39,9 @@ void OrderBook::matchLimit(const Order &order)
             _bids.insert(std::move(resting));
         else
             _asks.insert(std::move(resting));
+        return (true);
     }
+    return (false);
 }
 
 bool OrderBook::cancel(const Order &order)
