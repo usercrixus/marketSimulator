@@ -96,7 +96,7 @@ int OrderBook::matchMarketAgainst(const Order &order, Providers &providers)
     auto it = providers.begin();
     while (it != providers.end() && remaining > 0)
     {
-        bool priceOk = (order.side == Side::BUY ? (it->price <= order.price) : (it->price >= order.price));
+        bool priceOk = (order.side == Order::Side::BUY ? (it->price <= order.price) : (it->price >= order.price));
         if (!priceOk)
             break;
         int tradeQty = std::min(remaining, it->quantity);

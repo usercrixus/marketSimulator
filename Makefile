@@ -1,8 +1,8 @@
 OBJ = \
-	market/Market.o \
-	market/Order.o \
-	market/OrderBook.o \
-	agent/Agent.o \
+	srcs/market/Market.o \
+	srcs/market/Order.o \
+	srcs/market/OrderBook.o \
+	srcs/agent/Agent.o \
 
 all: Market.out
 
