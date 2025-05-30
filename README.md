@@ -8,35 +8,35 @@ This simulator models a financial exchange with a central order book. Agents can
 
 ## 👤 Agent Types
 
-    Basic Players: Simple, risk-averse agents who lose more often than they win. They provide minimal liquidity.
+Basic Players: Simple, risk-averse agents who lose more often than they win. They provide minimal liquidity.
 
-    Medium Players: More competent agents using market orders and moderate liquidity strategies.
+Medium Players: More competent agents using market orders and moderate liquidity strategies.
 
-    Pro Players:
+Pro Players:
 
-        Market Makers (full limit order)
+    Market Makers (full limit order)
 
-        Takers (full market order)
+    Takers (full market order)
 
-        Hybrids (mix of both)
+    Hybrids (mix of both)
 
 ## 🔄 Simulation Mode
 
-    Runs in discrete epochs for fast RL training.
+Runs in discrete epochs for fast RL training.
 
-    Agents submit orders, which are shuffled, matched via an order book, and settled.
+Agents submit orders, which are shuffled, matched via an order book, and settled.
 
-    Agents evolve over time through competition.
+Agents evolve over time through competition.
 
 ## ✅ Current Features
 
-    Central limit order book (price-time priority).
+Central limit order book (price-time priority).
 
-    Market, limit, cancel, and modify order types.
+Market, limit, cancel, and modify order types.
 
-    Real-time matching logic.
+Real-time matching logic.
 
-    Asset tracking per agent.
+Asset tracking per agent.
 
 ## 🚀 Getting Started
 
