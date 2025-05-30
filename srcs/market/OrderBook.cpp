@@ -13,6 +13,9 @@ void OrderBook::processOrder(const Order &order)
     case Order::Type::LIMIT:
         matchLimit(order);
         break;
+    case Order::Type::POST_ONLY_LIMIT:
+        matchPostOnlyLimit(order);
+        break;
     case Order::Type::CANCEL:
         cancel(order);
         break;
@@ -30,18 +33,45 @@ int OrderBook::matchMarket(const Order &order)
         return matchMarketAgainst(order, _bids);
 }
 
-bool OrderBook::matchLimit(const Order &order)
+void OrderBook::matchLimit(const Order &order)
 {
-    if (order.quantity > 0 && ((order.side == Order::Side::BUY && order.price > _asks.begin()->price || (order.side == Order::Side::BUY && order.price > _bids.begin()->price))))
+    int remaining = matchMarket(order);
+
+    if (remaining > 0)
     {
-        Order resting = Order::makeLimit(order.id, order.side, order.quantity, order.price, order.agent);
+        Order resting = Order::makeLimit(order.id, order.side, remaining, order.price, order.agent);
         if (order.side == Order::Side::BUY)
             _bids.insert(std::move(resting));
         else
             _asks.insert(std::move(resting));
-        return (true);
     }
-    return (false);
+}
+
+bool OrderBook::matchPostOnlyLimit(const Order &order)
+{
+    if (order.quantity <= 0)
+        return false;
+
+    bool crossesBook = false;
+    if (order.side == Order::Side::BUY)
+    {
+        if (!_asks.empty() && order.price >= _asks.begin()->price)
+            crossesBook = true;
+    }
+    else
+    {
+        if (!_bids.empty() && order.price <= _bids.begin()->price)
+            crossesBook = true;
+    }
+    if (crossesBook)
+        return false; // cancel if it would match
+    // otherwise, safe to rest the order
+    Order resting = Order::makeLimit(order.id, order.side, order.quantity, order.price, order.agent);
+    if (order.side == Order::Side::BUY)
+        _bids.insert(std::move(resting));
+    else
+        _asks.insert(std::move(resting));
+    return true;
 }
 
 bool OrderBook::cancel(const Order &order)

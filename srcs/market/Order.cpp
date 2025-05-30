@@ -5,7 +5,7 @@ Order Order::makeLimit(int id, Side side, int quantity, double price, Agent *age
 {
     Order order;
     order.id = id;
-    order.type = Type::LIMIT;
+    order.type = Type::POST_ONLY_LIMIT;
     order.side = side;
     order.quantity = quantity;
     order.price = price;

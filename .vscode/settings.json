@@ -64,6 +64,9 @@
         "format": "cpp",
         "__nullptr": "cpp",
         "__split_buffer": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "__bit_reference": "cpp",
+        "__hash_table": "cpp",
+        "__tree": "cpp"
     }
 }

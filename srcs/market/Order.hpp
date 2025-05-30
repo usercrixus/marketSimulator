@@ -22,6 +22,7 @@ public:
     enum class Type
     {
         LIMIT,
+        POST_ONLY_LIMIT,
         MARKET,
         CANCEL,
         MODIFY

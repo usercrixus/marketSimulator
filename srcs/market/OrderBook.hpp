@@ -66,9 +66,14 @@ private:
     int matchMarket(const Order &order);
 
     /**
-     * handle limit order registration
+     * handle limit order
      */
-    bool matchLimit(const Order &order);
+    void matchLimit(const Order &order);
+
+    /**
+     * handle post only limit order registration
+     */
+    bool matchPostOnlyLimit(const Order &order);
 
     /**
      * handle order limit order cancelation
