@@ -28,9 +28,9 @@ public:
     OrderBook getOrderBook() const;
 
 private:
-    int _epochs; // total number of epoch
-    int _currentEpoch; // current epoch 
+    int _epochs;                             // total number of epoch
+    int _currentEpoch;                       // current epoch
     std::vector<std::vector<Order>> _orders; // per-epoch order buckets
-    OrderBook _orderBook; // the order book of the market
-    std::vector<Agent *> _agents; // subscribed agents
+    OrderBook _orderBook;                    // the order book of the market
+    std::vector<Agent *> _agents;            // subscribed agents
 };
