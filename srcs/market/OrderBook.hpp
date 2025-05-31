@@ -15,6 +15,11 @@ public:
      */
     void processOrder(const Order &o);
 
+    /**
+     * record the snapshot at end of epoch
+     */
+    void recordSnapShot();
+
 private:
     /**
      * Automatic sorted container for bid
@@ -53,6 +58,26 @@ private:
      * ask order book
      */
     std::multiset<Order, AskCmp> _asks;
+
+    /**
+     * bids orderbook history
+     */
+    std::vector<std::multiset<Order, BidCmp>> _bidsSnapShot;
+
+    /**
+     * asks history
+     */
+    std::vector<std::multiset<Order, AskCmp>> _asksSnapShot;
+
+    /**
+     * trades for the epoch
+     */
+    std::vector<double> _trades;
+
+    /**
+     * trade history
+     */
+    std::vector<std::vector<double>> _tradeSnapShot;
 
     /**
      * For market order, try to fill it with the providers.

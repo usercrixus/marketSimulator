@@ -64,14 +64,14 @@ bool OrderBook::matchPostOnlyLimit(const Order &order)
             crossesBook = true;
     }
     if (crossesBook)
-        return false; // cancel if it would match
+        return (false); // cancel if it would match
     // otherwise, safe to rest the order
     Order resting = Order::makeLimit(order.id, order.side, order.quantity, order.price, order.agent);
     if (order.side == Order::Side::BUY)
         _bids.insert(std::move(resting));
     else
         _asks.insert(std::move(resting));
-    return true;
+    return (true);
 }
 
 bool OrderBook::cancel(const Order &order)
@@ -120,12 +120,23 @@ void OrderBook::manageTrade(const Order &taker, const Order &maker, double price
     {
         taker.agent->incrementAsset(price * qty * -1);
         maker.agent->incrementAsset(price * qty);
+        _trades.push_back(price * qty);
     }
     else
     {
         taker.agent->incrementAsset(price * qty);
         maker.agent->incrementAsset(price * qty * -1);
+        _trades.push_back(price * qty * -1);
     }
+}
+
+void OrderBook::recordSnapShot()
+{
+    _bidsSnapShot.push_back(_bids);
+    _asksSnapShot.push_back(_asks);
+    _tradeSnapShot.push_back(_trades);
+    _trades.clear();
+
 }
 
 std::multiset<Order, OrderBook::BidCmp> OrderBook::getBids() const

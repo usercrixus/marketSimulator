@@ -36,6 +36,8 @@ void Market::run()
             _orderBook.processOrder(o);
         // clear
         bucket.clear();
+        // record a snapshot of the orderbook for statistics
+        _orderBook.recordSnapShot();
     }
 }
 
