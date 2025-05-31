@@ -132,9 +132,9 @@ void OrderBook::manageTrade(const Order &taker, const Order &maker, double price
 
 void OrderBook::recordSnapShot()
 {
-    _bidsSnapShot.push_back(_bids);
-    _asksSnapShot.push_back(_asks);
-    _tradeSnapShot.push_back(_trades);
+    _bidsSnapShots.push_back(_bids);
+    _asksSnapShots.push_back(_asks);
+    _tradeSnapShots.push_back(_trades);
     _trades.clear();
 
 }
@@ -147,4 +147,19 @@ std::multiset<Order, OrderBook::BidCmp> OrderBook::getBids() const
 std::multiset<Order, OrderBook::AskCmp> OrderBook::getAsks() const
 {
     return (_asks);
+}
+
+std::vector<std::multiset<Order, OrderBook::BidCmp>> OrderBook::getBidsSnapShots()
+{
+    return (_bidsSnapShots);
+}
+
+std::vector<std::multiset<Order, OrderBook::AskCmp>> OrderBook::getAsksSnapShots()
+{
+    return (_asksSnapShots);
+}
+
+std::vector<std::vector<double>> OrderBook::getTradeSnapShots()
+{
+    return (_tradeSnapShots);
 }
