@@ -1,8 +1,8 @@
-// Order.hpp
 #pragma once
 
 #include <string>
-#include "../agent/Agent.hpp"
+
+class Agent;
 
 class Order
 {

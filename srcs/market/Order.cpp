@@ -1,5 +1,5 @@
-// Order.cpp
 #include "Order.hpp"
+#include "../agent/Agent.hpp"
 
 Order Order::makeLimit(int id, Side side, int quantity, double price, Agent *agent)
 {

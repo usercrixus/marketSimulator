@@ -1,7 +1,5 @@
-// OrderBook.cpp
 #include "OrderBook.hpp"
-#include <algorithm>
-#include <iostream>
+#include "../agent/Agent.hpp"
 
 void OrderBook::processOrder(const Order &order)
 {
@@ -136,30 +134,29 @@ void OrderBook::recordSnapShot()
     _asksSnapShots.push_back(_asks);
     _tradeSnapShots.push_back(_trades);
     _trades.clear();
-
 }
 
-std::multiset<Order, OrderBook::BidCmp> OrderBook::getBids() const
+const std::multiset<Order, OrderBook::BidCmp> &OrderBook::getBids() const
 {
     return (_bids);
 }
 
-std::multiset<Order, OrderBook::AskCmp> OrderBook::getAsks() const
+const std::multiset<Order, OrderBook::AskCmp> &OrderBook::getAsks() const
 {
     return (_asks);
 }
 
-std::vector<std::multiset<Order, OrderBook::BidCmp>> OrderBook::getBidsSnapShots()
+const std::vector<std::multiset<Order, OrderBook::BidCmp>> &OrderBook::getBidsSnapShots() const
 {
     return (_bidsSnapShots);
 }
 
-std::vector<std::multiset<Order, OrderBook::AskCmp>> OrderBook::getAsksSnapShots()
+const std::vector<std::multiset<Order, OrderBook::AskCmp>> &OrderBook::getAsksSnapShots() const
 {
     return (_asksSnapShots);
 }
 
-std::vector<std::vector<double>> OrderBook::getTradeSnapShots()
+const std::vector<std::vector<double>> &OrderBook::getTradeSnapShots() const
 {
     return (_tradeSnapShots);
 }

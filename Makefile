@@ -6,11 +6,12 @@ LDFLAGS = -Lsrcs/libtorch/lib -Wl,-rpath=srcs/libtorch/lib
 LDLIBS = -ltorch -ltorch_cpu -ltorch_cuda -lc10
 # Source & Object files
 SRC = \
+	srcs/statistics/Statistics.cpp \
+	srcs/agent/Agent.cpp \
+	srcs/agent/RandomAgent.cpp \
 	srcs/market/Market.cpp \
 	srcs/market/Order.cpp \
 	srcs/market/OrderBook.cpp \
-	srcs/agent/Agent.cpp \
-	srcs/agent/RandomAgent.cpp \
 
 OBJ = $(SRC:.cpp=.o)
 

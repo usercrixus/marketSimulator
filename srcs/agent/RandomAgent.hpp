@@ -6,20 +6,28 @@
 
 #pragma once
 
-#include "Agent.hpp"
-#include "../market/Market.hpp"
-#include "../market/Order.hpp"
 #include <torch/torch.h>
+#include <memory>
+#include "Agent.hpp"
 
+class Order;
+class Market;
 
-class RandomAgent : public Agent
-{
+class RandomAgent : public Agent {
 public:
     RandomAgent();
 
-    void onEpoch(Market &market) override;
+    void onEpoch(Statistics &statistics, Market &market);
+    void onReward() override;
 
 private:
-    torch::nn::Sequential model;
+    torch::nn::Sequential model{nullptr};
+    std::unique_ptr<torch::optim::Optimizer> optimizer;
+
     torch::Device device = torch::kCPU;
+
+    torch::Tensor lastState;
+    int lastAction = -1;
+
+    double gamma = 0.99;
 };

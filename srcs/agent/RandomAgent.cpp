@@ -4,36 +4,58 @@
  * DO NOT READ IT
  */
 
-
 #include "RandomAgent.hpp"
-#include <iostream>
+#include "../market/Order.hpp"
+#include "../market/Market.hpp"
 
-RandomAgent::RandomAgent() {
+RandomAgent::RandomAgent()
+{
     model = torch::nn::Sequential(
         torch::nn::Linear(2, 64),
         torch::nn::ReLU(),
-        torch::nn::Linear(64, 2) // output: [buy_prob, sell_prob]
+        torch::nn::Linear(64, 2) // Output: Q-values: [BUY, SELL]
     );
+    optimizer = std::make_unique<torch::optim::Adam>(model->parameters(), torch::optim::AdamOptions(1e-3));
     model->to(device);
 }
 
-void RandomAgent::onEpoch(Market &market) {
-    // Basic input: [mid_price, spread]
-    auto orderBook = market.getOrderBook();
-    if (orderBook.getBids().empty() || orderBook.getAsks().empty())
+void RandomAgent::onEpoch(Statistics &statistics, Market &market)
+{
+    if (statistics.getMidPrices().empty() || statistics.getSpreads().empty())
         return;
 
-    double bestBid = orderBook.getBids().begin()->price;
-    double bestAsk = orderBook.getAsks().begin()->price;
-    double midPrice = (bestBid + bestAsk) / 2.0;
-    double spread = bestAsk - bestBid;
+    double midPrice = statistics.getMidPrices().back();
+    double spread = statistics.getSpreads().back();
 
-    torch::Tensor input = torch::tensor({{midPrice, spread}}, device);
-    torch::Tensor output = model->forward(input);
+    torch::Tensor state = torch::tensor({{midPrice, spread}}, device);
+    torch::Tensor q_values = model->forward(state);
+    int action = q_values.argmax(1).item<int>();
 
-    int action = output.argmax(1).item<int>();
     Order::Side side = (action == 0) ? Order::Side::BUY : Order::Side::SELL;
-
     Order order = Order::makeLimit(-1, side, 10, midPrice, this);
     market.submitOrder(order);
+
+    lastState = state;
+    lastAction = action;
+}
+
+void RandomAgent::onReward()
+{
+    if (!lastState.defined())
+        return;
+
+    double reward = 0.0; // Placeholder — in the future, compute PnL or asset delta
+
+    torch::Tensor newState = lastState; // Ideally, use current market state
+
+    torch::NoGradGuard no_grad;
+    torch::Tensor target = model->forward(lastState).clone();
+    torch::Tensor futureQ = std::get<0>(model->forward(newState).max(1));
+    target[0][lastAction] = reward + gamma * futureQ.item<float>();
+
+    optimizer->zero_grad();
+    torch::Tensor prediction = model->forward(lastState);
+    torch::Tensor loss = torch::nn::functional::mse_loss(prediction, target);
+    loss.backward();
+    optimizer->step();
 }

@@ -4,8 +4,9 @@
 #include <iostream>
 #include <random>
 #include <algorithm>
-#include "OrderBook.hpp"
 #include "Order.hpp"
+#include "OrderBook.hpp"
+#include "../statistics/Statistics.hpp"
 
 class Agent;
 
@@ -33,4 +34,5 @@ private:
     std::vector<std::vector<Order>> _orders; // per-epoch order buckets
     OrderBook _orderBook;                    // the order book of the market
     std::vector<Agent *> _agents;            // subscribed agents
+    Statistics _statistics;                   // the market statistics
 };

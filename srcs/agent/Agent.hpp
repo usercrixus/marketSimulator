@@ -1,14 +1,16 @@
 #pragma once
 
-class Market;
+class Statistics;
 
 class Agent
 {
 private:
 	int asset;
+	int previousAsset;
 
 public:
 	virtual ~Agent() = default;
-	virtual void onEpoch(Market &market) = 0;
+	virtual void onEpoch(Statistics &statistics) = 0;
+	virtual void onReward() = 0;
 	void incrementAsset(int value);
 };

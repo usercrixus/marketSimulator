@@ -3,9 +3,10 @@
 
 #include <vector>
 #include <optional>
-#include "Order.hpp"
 #include <algorithm>
 #include <set>
+
+#include "Order.hpp"
 
 class OrderBook
 {
@@ -115,12 +116,11 @@ public:
      */
     void recordSnapShot();
 
-    std::multiset<Order, BidCmp> getBids() const;
-    std::multiset<Order, AskCmp> getAsks() const;
-    std::vector<std::multiset<Order, BidCmp>> getBidsSnapShots();
-    std::vector<std::multiset<Order, AskCmp>> getAsksSnapShots();
-    std::vector<std::vector<double>> getTradeSnapShots();
-
+    const std::multiset<Order, BidCmp> &getBids() const;
+    const std::multiset<Order, AskCmp> &getAsks() const;
+    const std::vector<std::multiset<Order, BidCmp>> &getBidsSnapShots() const;
+    const std::vector<std::multiset<Order, AskCmp>> &getAsksSnapShots() const;
+    const std::vector<std::vector<double>> &getTradeSnapShots() const;
 };
 
 #include "OrderBook.ipp"

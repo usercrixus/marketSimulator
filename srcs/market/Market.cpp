@@ -1,5 +1,7 @@
 #include "Market.hpp"
 
+#include "../agent/Agent.hpp"
+
 Market::Market(int epochs)
     : _epochs(epochs),
       _currentEpoch(0),
@@ -29,7 +31,7 @@ void Market::run()
     {
         // give each agent a chance to look at the book & submit
         for (auto *agent : _agents)
-            agent->onEpoch(*this);
+            agent->onEpoch(_statistics);
         // grab this epoch’s bucket
         std::vector<Order> &bucket = _orders[_currentEpoch];
         // shuffle for fairness
@@ -37,10 +39,15 @@ void Market::run()
         // process
         for (const Order &o : bucket)
             _orderBook.processOrder(o);
-        // clear
+        // clear for memory management
         bucket.clear();
         // record a snapshot of the orderbook for statistics
         _orderBook.recordSnapShot();
+        // record the statistics
+        _statistics.record(_orderBook);
+        // reward the agent
+        for (auto *agent : _agents)
+            agent->onReward();
     }
 }
 
