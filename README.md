@@ -30,6 +30,10 @@ Asset tracking per agent.
 
 ## 🚀 Getting Started
 
+Install torch (ubuntu): 
+Make libtorch  
+  
+Then all is ok.  
+  
 Entry point:  
 srcs/market/Market.hpp/cpp  
-Start the simulation, register agents, and call .run().  

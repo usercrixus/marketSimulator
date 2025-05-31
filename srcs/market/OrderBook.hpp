@@ -9,17 +9,6 @@
 
 class OrderBook
 {
-public:
-    /**
-     * routing to manage order processing, meaning try to buy/sell, records limit orders in the OrderBook and so on.
-     */
-    void processOrder(const Order &o);
-
-    /**
-     * record snapshots of order book, trade ans so on, at end of epoch.
-     */
-    void recordSnapShot();
-
 private:
     /**
      * Automatic sorted container for bid
@@ -114,6 +103,17 @@ private:
      * Manage the agent asset portfolio. Record the trade.
      */
     void manageTrade(const Order &taker, const Order &maker, double price, int qty);
+
+public:
+    /**
+     * routing to manage order processing, meaning try to buy/sell, records limit orders in the OrderBook and so on.
+     */
+    void processOrder(const Order &o);
+
+    /**
+     * record snapshots of order book, trade ans so on, at end of epoch.
+     */
+    void recordSnapShot();
 
     std::multiset<Order, BidCmp> getBids() const;
     std::multiset<Order, AskCmp> getAsks() const;

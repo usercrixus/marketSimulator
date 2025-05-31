@@ -20,7 +20,7 @@ public:
     /**
      * Agents (or external code) call this to queue an order for a future epoch
      */
-    void submitOrder(const Order &order);
+    void submitOrder(Order &order);
     /**
      * Run all epochs in sequence: call agents → shuffle → match → clear
      */

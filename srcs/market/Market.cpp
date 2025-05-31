@@ -12,8 +12,11 @@ void Market::registerAgent(Agent &agent)
     _agents.push_back(&agent);
 }
 
-void Market::submitOrder(const Order &order)
+void Market::submitOrder(Order &order)
 {
+    static int id = 0;
+
+    order.id = id++;
     _orders[_currentEpoch].push_back(order);
 }
 
