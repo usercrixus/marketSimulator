@@ -7,6 +7,7 @@
 #include "RandomAgent.hpp"
 #include "../market/Order.hpp"
 #include "../market/Market.hpp"
+#include "Agent.hpp"
 
 RandomAgent::RandomAgent()
 {
@@ -59,3 +60,4 @@ void RandomAgent::onReward()
     loss.backward();
     optimizer->step();
 }
+

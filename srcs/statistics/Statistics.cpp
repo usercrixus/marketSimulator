@@ -17,8 +17,8 @@ void Statistics::trim(std::deque<double> &data)
 
 void Statistics::recordMidPrice(OrderBook &orderBook)
 {
-    if (orderBook.getAsks().begin() != orderBook.getAsks().end() && orderBook.getBids().begin() != orderBook.getBids().end())
-        midPrices.push_back(orderBook.getAsks().begin()->price / orderBook.getBids().begin()->price);
+    if (!orderBook.getAsks().empty() && !orderBook.getBids().empty())
+        midPrices.push_back(orderBook.getAsks().begin()->first /  std::prev(orderBook.getBids().end())->first);
     else
         midPrices.push_back(0.0);
     trim(midPrices);
@@ -26,13 +26,13 @@ void Statistics::recordMidPrice(OrderBook &orderBook)
 
 void Statistics::recordBestPrices(OrderBook &orderBook)
 {
-    if (orderBook.getAsks().begin() != orderBook.getAsks().end())
-        bestAsks.push_back(orderBook.getAsks().begin()->price);
+    if (!orderBook.getAsks().empty())
+        bestAsks.push_back(orderBook.getAsks().begin()->first);
     else
         bestAsks.push_back(0);
     trim(bestAsks);
-    if (orderBook.getBids().begin() != orderBook.getBids().end())
-        bestBids.push_back(orderBook.getBids().begin()->price);
+    if (!orderBook.getBids().empty())
+        bestBids.push_back(std::prev(orderBook.getBids().end())->first);
     else
         bestBids.push_back(0);
     trim(bestBids);
@@ -40,10 +40,11 @@ void Statistics::recordBestPrices(OrderBook &orderBook)
 
 void Statistics::recordSpread(OrderBook &orderBook)
 {
-    if (orderBook.getAsks().begin() != orderBook.getAsks().end() && orderBook.getBids().begin() != orderBook.getBids().end())
-        spreads.push_back(orderBook.getAsks().begin()->price - orderBook.getBids().begin()->price);
+    if (!orderBook.getAsks().empty() && !orderBook.getBids().empty())
+        spreads.push_back(orderBook.getAsks().begin()->first - std::prev(orderBook.getBids().end())->first);
     else
-        spreads.push_back(0.0); 
+        spreads.push_back(0.0);
+    trim(spreads);
 }
 
 void Statistics::record(OrderBook &orderBook)

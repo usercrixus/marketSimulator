@@ -37,8 +37,8 @@ void Market::run()
         // shuffle for fairness
         std::shuffle(bucket.begin(), bucket.end(), gen);
         // process
-        for (const Order &o : bucket)
-            _orderBook.processOrder(o);
+        for (Order &order : bucket)
+            _orderBook.processOrder(order);
         // clear for memory management
         bucket.clear();
         // record a snapshot of the orderbook for statistics
