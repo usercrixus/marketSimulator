@@ -51,7 +51,7 @@ bool Market::initMarket()
 
         _orderBook.forceSnapshot(bidsMap, asksMap, tradeVec);
     }
-    _statistics.recordFromSnapshot(_orderBook.getBidsSnapShots()[0], _orderBook.getAsksSnapShots()[0]);
+    _statistics.initStats(_orderBook);
     return (true);
 }
 
@@ -91,7 +91,7 @@ void Market::run()
         // record a snapshot of the orderbook for statistics
         _orderBook.recordSnapShot();
         // record the statistics
-       _statistics.recordFromSnapshot(_orderBook.getBidsSnapShots()[0], _orderBook.getAsksSnapShots()[0]);
+       _statistics.record(_orderBook);
         // reward the agent
         for (auto *agent : _agents)
             agent->onReward();

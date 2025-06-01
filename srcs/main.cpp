@@ -4,7 +4,7 @@
 
 int main()
 {
-    Market market(100);
+    Market market(10);
     std::vector<RandomAgent> agents;
     agents.reserve(100);
     for (int i = 0; i < 100; i++)

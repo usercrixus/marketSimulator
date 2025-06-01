@@ -164,6 +164,10 @@ void OrderBook::modify(const Order &order)
                                                               { return o.id == order.targetId; });
         if (targetOrder != orderList.end())
         {
+            // Finally, insert the updated one at its new price
+            std::list<Order> &newList = book[order.price];
+            newList.push_back(Order::makeLimit(targetOrder->id, targetOrder->side, order.quantity, order.price, targetOrder->agent));
+            newList.back().agent->addPendingOrder(newList.back());
             // Remove the old one from the agent’s pending list
             targetOrder->agent->removePendingOrder(*targetOrder);
             // Erase the old one from this price level
@@ -173,10 +177,6 @@ void OrderBook::modify(const Order &order)
                 bookLevel = book.erase(bookLevel);
             else
                 ++bookLevel;
-            // Finally, insert the updated one at its new price
-            std::list<Order> &newList = book[order.price];
-            newList.push_back(Order::makeLimit(targetOrder->id, targetOrder->side, order.quantity, order.price, targetOrder->agent));
-            newList.back().agent->addPendingOrder(newList.back());
             break;
         }
         else

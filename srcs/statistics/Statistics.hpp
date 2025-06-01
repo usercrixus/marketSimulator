@@ -28,7 +28,7 @@ public:
      * records the statistics from the orderbook
      */
     void record(OrderBook &orderBook);
-    void recordFromSnapshot(const std::map<double, std::list<Order>> &bidsSnapshot, const std::map<double, std::list<Order>> &asksSnapshot);
+    void initStats(OrderBook &orderBook);
 
     const std::deque<double> &getMidPrices() const { return midPrices; }
     const std::deque<double> &getBestBids() const { return bestBids; }
