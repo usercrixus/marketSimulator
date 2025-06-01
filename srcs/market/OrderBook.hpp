@@ -12,6 +12,7 @@ public:
     void processOrder(Order &order);
     void recordSnapShot();
     void forceSnapshot(const std::map<double, std::list<Order>> &bids, const std::map<double, std::list<Order>> &asks, const std::vector<double> &trades);
+    void printBook();
 
     const std::map<double, std::list<Order>> &getBids() const;
     const std::map<double, std::list<Order>> &getAsks() const;
@@ -34,6 +35,6 @@ private:
     void matchPostOnlyLimit(const Order &order);
     void cancel(const Order &order);
     void modify(const Order &order);
-    void manageTrade(const Order &taker, const Order &maker, double price, int qty);
+    void manageTrade(const Order &taker, const Order &maker, double price, double qty);
     void matchMarketAgainst(Order &order, std::map<double, std::list<Order>> &providers, bool isBidSide);
 };

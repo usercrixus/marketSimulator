@@ -3,6 +3,7 @@
 #include <deque>
 #include <map>
 #include <list>
+#include <vector>
 
 class OrderBook;
 class Order;
@@ -22,6 +23,8 @@ private:
     void recordSpread(OrderBook &orderBook);
 
 public:
+    static std::vector<double> normalizeDeque(const std::deque<double> &data);
+
     Statistics();
     ~Statistics();
     /**

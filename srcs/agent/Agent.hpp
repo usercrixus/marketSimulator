@@ -11,6 +11,7 @@ class Agent
 protected:
 	double asset;
 	double previousAsset;
+	bool isUpdated;
 	std::vector<const Order *> pendingsOrders;
 
 public:
@@ -22,6 +23,7 @@ public:
 	void addPendingOrder(const Order &order);
 	void removePendingOrder(const Order &order);
 	void incrementAsset(double value);
+	void setAsset(double value);
 
 	double getAsset();
 };

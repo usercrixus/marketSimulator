@@ -75,7 +75,7 @@ void Market::run()
 
     for (_currentEpoch = 0; _currentEpoch < _epochs; ++_currentEpoch)
     {
-        std::cout << "Epoch: " << _currentEpoch << "/" << _epochs << std::endl; 
+        std::cout << "Epoch: " << _currentEpoch << "/" << _epochs << " midPrice: " << _statistics.getMidPrices().back() << std::endl;
         // give each agent a chance to look at the book & submit
         for (auto *agent : _agents)
             agent->onEpoch(_statistics, *this);
@@ -91,7 +91,7 @@ void Market::run()
         // record a snapshot of the orderbook for statistics
         _orderBook.recordSnapShot();
         // record the statistics
-       _statistics.record(_orderBook);
+        _statistics.record(_orderBook);
         // reward the agent
         for (auto *agent : _agents)
             agent->onReward();

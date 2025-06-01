@@ -8,7 +8,9 @@ LDLIBS = -ltorch -ltorch_cpu -ltorch_cuda -lc10
 SRC = \
 	srcs/statistics/Statistics.cpp \
 	srcs/agent/Agent.cpp \
-	srcs/agent/RandomAgent.cpp \
+	srcs/agent/MarketMakerAgent.cpp \
+	srcs/agent/TakerAgent.cpp \
+	srcs/agent/models/ModelLSTM.cpp \
 	srcs/market/Market.cpp \
 	srcs/market/Order.cpp \
 	srcs/market/OrderBook.cpp \

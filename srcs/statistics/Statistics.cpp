@@ -1,7 +1,8 @@
 #include "Statistics.hpp"
 #include "../market/OrderBook.hpp"
+#include <algorithm>
 
-Statistics::Statistics(/* args */)
+Statistics::Statistics()
 {
 }
 
@@ -17,33 +18,73 @@ void Statistics::trim(std::deque<double> &data)
 
 void Statistics::recordMidPrice(OrderBook &orderBook)
 {
-    if (!orderBook.getAsksSnapShots().empty() && !orderBook.getBidsSnapShots().empty())
-        midPrices.push_back((orderBook.getAsksSnapShots().rbegin()->begin()->first + orderBook.getBidsSnapShots().rbegin()->rbegin()->first) / 2);
+    const auto &asksVec = orderBook.getAsksSnapShots();
+    const auto &bidsVec = orderBook.getBidsSnapShots();
+
+    double newMid = 0.0;
+
+    if (!asksVec.empty() && !bidsVec.empty())
+    {
+        const auto &asksMap = asksVec.back();
+        const auto &bidsMap = bidsVec.back();
+        if (!asksMap.empty() && !bidsMap.empty())
+        {
+            double bestAsk = asksMap.begin()->first;
+            double bestBid = bidsMap.rbegin()->first;
+            newMid = (bestAsk + bestBid) / 2.0;
+        }
+        else if (!asksMap.empty())
+            newMid = asksMap.begin()->first;
+        else if (!bidsMap.empty())
+            newMid = bidsMap.rbegin()->first;
+        else
+            newMid = midPrices.empty() ? 0.0 : midPrices.back();
+    }
+    else if (!asksVec.empty())
+    {
+        const auto &asksMap = asksVec.back();
+        newMid = asksMap.empty() ? (midPrices.empty() ? 0.0 : midPrices.back()) : asksMap.begin()->first;
+    }
+    else if (!bidsVec.empty())
+    {
+        const auto &bidsMap = bidsVec.back();
+        newMid = bidsMap.empty() ? (midPrices.empty() ? 0.0 : midPrices.back()) : bidsMap.rbegin()->first;
+    }
     else
-        midPrices.push_back(0.0);
+        newMid = midPrices.empty() ? 0.0 : midPrices.back();
+    midPrices.push_back(newMid);
     trim(midPrices);
 }
 
 void Statistics::recordBestPrices(OrderBook &orderBook)
 {
-    if (!orderBook.getAsksSnapShots().empty())
-        bestAsks.push_back(orderBook.getAsksSnapShots().rbegin()->begin()->first);
+    const auto &asksVec = orderBook.getAsksSnapShots();
+    if (!asksVec.empty() && !asksVec.back().empty())
+        bestAsks.push_back(asksVec.back().begin()->first);
     else
-        bestAsks.push_back(0);
+        bestAsks.push_back(bestAsks.back());
     trim(bestAsks);
-    if (!orderBook.getBidsSnapShots().empty())
-        bestBids.push_back(orderBook.getBidsSnapShots().rbegin()->rbegin()->first);
+
+    const auto &bidsVec = orderBook.getBidsSnapShots();
+    if (!bidsVec.empty() && !bidsVec.back().empty())
+        bestBids.push_back(bidsVec.back().rbegin()->first);
     else
-        bestBids.push_back(0);
+        bestBids.push_back(bestBids.back());
     trim(bestBids);
 }
 
 void Statistics::recordSpread(OrderBook &orderBook)
 {
-    if (!orderBook.getAsksSnapShots().empty() && !orderBook.getBidsSnapShots().empty())
-        spreads.push_back(orderBook.getAsksSnapShots().rbegin()->begin()->first - orderBook.getBidsSnapShots().rbegin()->rbegin()->first);
+    const auto &asksVec = orderBook.getAsksSnapShots();
+    const auto &bidsVec = orderBook.getBidsSnapShots();
+    if (!asksVec.empty() && !bidsVec.empty() && !asksVec.back().empty() && !bidsVec.back().empty())
+    {
+        double bestAsk = asksVec.back().begin()->first;
+        double bestBid = bidsVec.back().rbegin()->first;
+        spreads.push_back(bestAsk - bestBid);
+    }
     else
-        spreads.push_back(0.0);
+        spreads.push_back(spreads.back());
     trim(spreads);
 }
 
@@ -59,12 +100,14 @@ void Statistics::initStats(OrderBook &orderBook)
     auto asksSnapShots = orderBook.getAsksSnapShots().rbegin();
     auto bidsSnapShots = orderBook.getBidsSnapShots().rbegin();
 
-    while (asksSnapShots != orderBook.getAsksSnapShots().rend() && bidsSnapShots != orderBook.getBidsSnapShots().rend())
+    while (asksSnapShots != orderBook.getAsksSnapShots().rend() &&
+           bidsSnapShots != orderBook.getBidsSnapShots().rend())
     {
         auto asksSnapshot = asksSnapShots->begin();
         auto bidsSnapshot = bidsSnapShots->rbegin();
 
-        if (asksSnapshot != asksSnapShots->end() && bidsSnapshot != bidsSnapShots->rend())
+        if (asksSnapshot != asksSnapShots->end() &&
+            bidsSnapshot != bidsSnapShots->rend())
         {
             double bestAsk = asksSnapshot->first;
             double bestBid = bidsSnapshot->first;
@@ -88,4 +131,30 @@ void Statistics::initStats(OrderBook &orderBook)
         ++asksSnapShots;
         ++bidsSnapShots;
     }
+}
+
+std::vector<double> Statistics::normalizeDeque(const std::deque<double> &data)
+{
+    std::vector<double> result;
+    result.reserve(data.size());
+
+    if (data.empty())
+        return result;
+
+    double mn = *std::min_element(data.begin(), data.end());
+    double mx = *std::max_element(data.begin(), data.end());
+
+    if (mn == mx)
+    {
+        result.assign(data.size(), 0.0);
+        return result;
+    }
+
+    double range = mx - mn;
+    for (double x : data)
+    {
+        double scaled = 2.0 * (x - mn) / range - 1.0;
+        result.push_back(scaled);
+    }
+    return result;
 }

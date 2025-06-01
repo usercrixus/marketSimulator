@@ -40,7 +40,7 @@ public:
     static Order makeLimit(int id, Side side, double quantity, double price, Agent *agent);
     static Order makeMarket(int id, Side side, double quantity, Agent *agent);
     static Order makeCancel(int id, int toCancel, Agent *agent);
-    static Order makeModify(int id, int toModify, int newQty, double newPrice, Agent *agent);
+    static Order makeModify(int id, int toModify, double newQty, double newPrice, Agent *agent);
     static Order makePostOnlyLimit(int id, Side side, double quantity, double price, Agent *agent);
 private:
     Order() = default; // force use of named factories

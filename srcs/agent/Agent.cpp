@@ -2,7 +2,7 @@
 #include "../statistics/Statistics.hpp"
 #include "../market/Order.hpp"
 
-Agent::Agent(): asset(100000), previousAsset(100000)
+Agent::Agent(): asset(100000), previousAsset(100000), isUpdated(false)
 {
 }
 
@@ -12,7 +12,14 @@ Agent::~Agent()
 
 void Agent::incrementAsset(double value)
 {
+    previousAsset = asset;
 	asset += value;
+    isUpdated = true;
+}
+
+void Agent::setAsset(double value)
+{
+    asset = value;
 }
 
 double Agent::getAsset()
@@ -38,3 +45,4 @@ void Agent::removePendingOrder(const Order &order)
         it++;
     }
 }
+

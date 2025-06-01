@@ -53,7 +53,7 @@ Order Order::makeCancel(int id, int toCancel, Agent *agent)
     return order;
 }
 
-Order Order::makeModify(int id, int toModify, int newQty, double newPrice, Agent *agent)
+Order Order::makeModify(int id, int toModify, double newQty, double newPrice, Agent *agent)
 {
     Order order;
     order.id = id;

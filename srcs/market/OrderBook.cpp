@@ -44,7 +44,7 @@ void OrderBook::matchMarketAgainst(Order &order, std::map<double, std::list<Orde
         std::list<Order>::iterator providerLevel = providersLevel.begin();
         while (providerLevel != providersLevel.end() && order.quantity > 0)
         {
-            int tradeQty = std::min(order.quantity, providerLevel->quantity);
+            double tradeQty = std::min(order.quantity, providerLevel->quantity);
             // Execute the trade
             manageTrade(order, *providerLevel, priceLevel, tradeQty);
             // Decrement both sides’ quantities
@@ -68,7 +68,6 @@ void OrderBook::matchMarketAgainst(Order &order, std::map<double, std::list<Orde
 void OrderBook::matchLimit(Order &order)
 {
     matchMarket(order);
-
     if (order.quantity > 0)
     {
         if (order.side == Order::Side::BUY)
@@ -184,21 +183,25 @@ void OrderBook::modify(const Order &order)
     }
 }
 
-void OrderBook::manageTrade(const Order &taker, const Order &maker, double price, int qty)
+void OrderBook::manageTrade(const Order &taker, const Order &maker, double price, double qty)
 {
     if (taker.side == Order::Side::BUY)
     {
-        taker.agent->incrementAsset(-1 * price * qty);
-        maker.agent->incrementAsset(price * qty);
+        if (taker.agent)
+            taker.agent->incrementAsset(-1 * price * qty);
+        if (maker.agent)
+            maker.agent->incrementAsset(price * qty);
         _trades.push_back(price * qty);
-        std::cout << "trade done, price: " << price << " quantity: " << qty << std::endl;
+        // std::cout << "trade done, price: " << price << " quantity: " << qty << std::endl;
     }
     else
     {
-        taker.agent->incrementAsset(price * qty);
-        maker.agent->incrementAsset(-1 * price * qty);
+        if (taker.agent)
+            taker.agent->incrementAsset(price * qty);
+        if (maker.agent)
+            maker.agent->incrementAsset(-1 * price * qty);
         _trades.push_back(price * qty);
-        std::cout << "trade done, price: " << price << " quantity: " << qty << std::endl;
+        // std::cout << "trade done, price: " << price << " quantity: " << qty << std::endl;
     }
 }
 
@@ -215,6 +218,16 @@ void OrderBook::forceSnapshot(const std::map<double, std::list<Order>> &bids, co
     _bidsSnapShots.push_back(bids);
     _asksSnapShots.push_back(asks);
     _tradeSnapShots.push_back(trades);
+}
+
+void OrderBook::printBook()
+{
+    std::cout << "Bid: " << std::endl;
+    for (auto bid : _bids)
+        std::cout << bid.first << std::endl;
+    std::cout << "Ask: " << std::endl;
+    for (auto ask : _asks)
+        std::cout << ask.first << std::endl;
 }
 
 const std::map<double, std::list<Order>> &

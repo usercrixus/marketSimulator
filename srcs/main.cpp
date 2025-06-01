@@ -1,27 +1,36 @@
 #include "market/Market.hpp"
 #include "agent/Agent.hpp"
-#include "agent/RandomAgent.hpp"
+#include "agent/MarketMakerAgent.hpp"
+#include "agent/TakerAgent.hpp"
 
 int main()
 {
-    Market market(10);
-    std::vector<RandomAgent> agents;
-    agents.reserve(100);
-    for (int i = 0; i < 100; i++)
-    {
-        agents.emplace_back();
-        market.registerAgent(agents.back());
-    }
-    if (!market.initMarket())
-        return (std::cout << "failed to init the market" << std::endl, 1);
-    else
-        std::cout << "Market initialized" << std::endl;
+    std::vector<MarketMakerAgent> marketMakerAgent;
+    marketMakerAgent.reserve(100);
+    for (int i = 0; i < 20; i++)
+        marketMakerAgent.emplace_back();
 
-    market.run();
+    std::vector<TakerAgent> takerAgent;
+    takerAgent.reserve(100);
+    for (int i = 0; i < 80; i++)
+        takerAgent.emplace_back();
 
-    for (auto &agent : agents)
+    int epoch = 0;
+    while (epoch < 1000)
     {
-        std::cout << "agent asset:" << agent.getAsset() << std::endl;
+        Market market(100);
+        for (auto &agent : marketMakerAgent)
+            market.registerAgent(agent);
+        for (auto &agent : takerAgent)
+            market.registerAgent(agent);
+        if (!market.initMarket())
+            return (std::cout << "failed to init the market" << std::endl, 1);
+        else
+            std::cout << "Market initialized" << std::endl;
+        market.run();
+        for (auto &agent : marketMakerAgent)
+            std::cout << "agent asset:" << agent.getAsset() << std::endl;
+        epoch++;
     }
     return 0;
 }
