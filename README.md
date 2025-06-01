@@ -37,3 +37,4 @@ Then all is ok.
   
 Entry point:  
 srcs/market/Market.hpp/cpp  
+Agent class are still in progress (it is a part that we have to study hard), don't judge it (even don't read it, or read it, but keep in mind that it is a true draft)

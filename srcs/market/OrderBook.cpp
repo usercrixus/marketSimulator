@@ -6,7 +6,6 @@
 
 void OrderBook::processOrder(Order &order)
 {
-    std::cout << "Order: " << order.id << " processed" << std::endl;
     switch (order.type)
     {
     case Order::Type::MARKET:
@@ -68,7 +67,6 @@ void OrderBook::matchMarketAgainst(Order &order, std::map<double, std::list<Orde
 
 void OrderBook::matchLimit(Order &order)
 {
-    std::cout << "match limit is called" << std::endl;
     matchMarket(order);
 
     if (order.quantity > 0)
@@ -77,13 +75,13 @@ void OrderBook::matchLimit(Order &order)
         {
             std::list<Order> &levelList = _bids[order.price];
             levelList.push_back(order);
-            order.agent->addPendingOrder(&levelList.back());
+            order.agent->addPendingOrder(levelList.back());
         }
         else
         {
             std::list<Order> &levelList = _asks[order.price];
             levelList.push_back(order);
-            order.agent->addPendingOrder(&levelList.back());
+            order.agent->addPendingOrder(levelList.back());
         }
     }
 }
@@ -119,13 +117,13 @@ void OrderBook::matchPostOnlyLimit(const Order &order)
     {
         std::list<Order> &levelList = _bids[order.price];
         levelList.push_back(order);
-        order.agent->addPendingOrder(&levelList.back());
+        order.agent->addPendingOrder(levelList.back());
     }
     else
     {
         auto &levelList = _asks[order.price];
         levelList.push_back(order);
-        order.agent->addPendingOrder(&levelList.back());
+        order.agent->addPendingOrder(levelList.back());
     }
 }
 
@@ -178,7 +176,7 @@ void OrderBook::modify(const Order &order)
             // Finally, insert the updated one at its new price
             std::list<Order> &newList = book[order.price];
             newList.push_back(Order::makeLimit(targetOrder->id, targetOrder->side, order.quantity, order.price, targetOrder->agent));
-            newList.back().agent->addPendingOrder(&newList.back());
+            newList.back().agent->addPendingOrder(newList.back());
             break;
         }
         else

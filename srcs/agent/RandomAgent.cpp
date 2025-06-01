@@ -1,7 +1,7 @@
 #include "RandomAgent.hpp"
 #include "../market/Order.hpp"
 #include "../market/Market.hpp"
-#include <iostream> // for logging
+#include <iostream>
 
 RandomAgent::RandomAgent() : Agent()
 {
@@ -46,7 +46,7 @@ void RandomAgent::onEpoch(Statistics &statistics, Market &market)
 
     std::cout << "[onEpoch] midPrice=" << midPrice << " spread=" << spread << " → action=" << action << (side == Order::Side::BUY ? "(BUY" : "(SELL") << " @ " << limitPrice << ")\n";
 
-    Order order = Order::makeLimit(-1, side, 10, limitPrice, this);
+    Order order = Order::makeLimit(-1, side, 1, limitPrice, this);
     market.submitOrder(order);
 
     lastState = state;

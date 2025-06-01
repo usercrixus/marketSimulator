@@ -6,6 +6,10 @@ Agent::Agent(): asset(100000), previousAsset(100000)
 {
 }
 
+Agent::~Agent()
+{
+}
+
 void Agent::incrementAsset(double value)
 {
 	asset += value;
@@ -16,9 +20,9 @@ double Agent::getAsset()
     return (asset);
 }
 
-void Agent::addPendingOrder(const Order *order)
+void Agent::addPendingOrder(const Order &order)
 {
-    pendingsOrders.push_back(order);
+    pendingsOrders.push_back(&order);
 }
 
 void Agent::removePendingOrder(const Order &order)
