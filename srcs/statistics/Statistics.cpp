@@ -53,3 +53,28 @@ void Statistics::record(OrderBook &orderBook)
     recordBestPrices(orderBook);
     recordSpread(orderBook);
 }
+
+void Statistics::recordFromSnapshot(
+    const std::map<double,std::list<Order>> &bidsSnapshot,
+    const std::map<double,std::list<Order>> &asksSnapshot)
+{
+    // mid = (bestAsk + bestBid)/2 or bestAsk/bestBid or however you like
+    if (!asksSnapshot.empty() && !bidsSnapshot.empty()) {
+        double bestAsk = asksSnapshot.begin()->first;
+        double bestBid = std::prev(bidsSnapshot.end())->first;
+        midPrices.push_back((bestAsk + bestBid)/2.0);
+        spreads.push_back(bestAsk - bestBid);
+        bestAsks.push_back(bestAsk);
+        bestBids.push_back(bestBid);
+    }
+    else {
+        midPrices.push_back(0.0);
+        spreads.push_back(0.0);
+        bestAsks.push_back(0.0);
+        bestBids.push_back(0.0);
+    }
+    trim(midPrices);
+    trim(spreads);
+    trim(bestAsks);
+    trim(bestBids);
+}

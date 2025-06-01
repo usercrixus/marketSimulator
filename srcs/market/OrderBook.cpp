@@ -1,11 +1,12 @@
 #include "OrderBook.hpp"
-#include "../agent/Agent.hpp" // for Agent::addPendingOrder, removePendingOrder, incrementAsset, etc.
-
-#include <iterator>  // for std::prev
-#include <algorithm> // for std::min
+#include "../agent/Agent.hpp"
+#include <iterator>
+#include <algorithm>
+#include <iostream>
 
 void OrderBook::processOrder(Order &order)
 {
+    std::cout << "Order: " << order.id << " processed" << std::endl;
     switch (order.type)
     {
     case Order::Type::MARKET:
@@ -67,6 +68,7 @@ void OrderBook::matchMarketAgainst(Order &order, std::map<double, std::list<Orde
 
 void OrderBook::matchLimit(Order &order)
 {
+    std::cout << "match limit is called" << std::endl;
     matchMarket(order);
 
     if (order.quantity > 0)
@@ -191,12 +193,14 @@ void OrderBook::manageTrade(const Order &taker, const Order &maker, double price
         taker.agent->incrementAsset(-1 * price * qty);
         maker.agent->incrementAsset(price * qty);
         _trades.push_back(price * qty);
+        std::cout << "trade done, price: " << price << " quantity: " << qty << std::endl;
     }
     else
     {
         taker.agent->incrementAsset(price * qty);
         maker.agent->incrementAsset(-1 * price * qty);
-        _trades.push_back(-1 * price * qty);
+        _trades.push_back(price * qty);
+        std::cout << "trade done, price: " << price << " quantity: " << qty << std::endl;
     }
 }
 
@@ -206,6 +210,13 @@ void OrderBook::recordSnapShot()
     _asksSnapShots.push_back(_asks);
     _tradeSnapShots.push_back(_trades);
     _trades.clear();
+}
+
+void OrderBook::forceSnapshot(const std::map<double, std::list<Order>> &bids, const std::map<double, std::list<Order>> &asks, const std::vector<double> &trades)
+{
+    _bidsSnapShots.push_back(bids);
+    _asksSnapShots.push_back(asks);
+    _tradeSnapShots.push_back(trades);
 }
 
 const std::map<double, std::list<Order>> &

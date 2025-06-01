@@ -1,2 +1,4 @@
 *.o
-srcs/libtorch/
+srcs/externalLibrary/libtorch/
+**/binance_snapshots_clean.json
+*.out

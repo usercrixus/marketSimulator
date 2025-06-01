@@ -2,9 +2,18 @@
 #include "../statistics/Statistics.hpp"
 #include "../market/Order.hpp"
 
-void Agent::incrementAsset(int value)
+Agent::Agent(): asset(100000), previousAsset(100000)
+{
+}
+
+void Agent::incrementAsset(double value)
 {
 	asset += value;
+}
+
+double Agent::getAsset()
+{
+    return (asset);
 }
 
 void Agent::addPendingOrder(const Order *order)

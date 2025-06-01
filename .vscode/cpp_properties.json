@@ -3,9 +3,9 @@
     {
       "name": "Linux",
       "includePath": [
-        "${workspaceFolder}/srcs/libtorch/include",
-        "${workspaceFolder}/srcs/libtorch/include/torch/csrc/api/include",
-        "${workspaceFolder}/**"
+        "${workspaceFolder}/srcs/externalLibrary/libtorch/include",
+        "${workspaceFolder}/srcs/externalLibrary/libtorch/include/torch/csrc/api/include",
+        "${workspaceFolder}/srcs/externalLibrary/nlohmann"
       ],
       "defines": [
         "_GLIBCXX_USE_CXX11_ABI=1",

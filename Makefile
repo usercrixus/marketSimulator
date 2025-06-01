@@ -1,8 +1,8 @@
 # Flags
 MYFLAGS = -std=c++17 -Wall -Wextra -Werror
-SYSFLAGS = -isystem srcs/libtorch/include -isystem srcs/libtorch/include/torch/csrc/api/include
+SYSFLAGS = -isystem srcs/externalLibrary/libtorch/include -isystem srcs/externalLibrary/libtorch/include/torch/csrc/api/include -Isrcs/externalLibrary/nlohmann 
 # Linking
-LDFLAGS = -Lsrcs/libtorch/lib -Wl,-rpath=srcs/libtorch/lib
+LDFLAGS = -Lsrc/externalLibrary/nlohmann -Lsrcs/externalLibrary/libtorch/lib -Wl,-rpath=srcs/externalLibrary/libtorch/lib
 LDLIBS = -ltorch -ltorch_cpu -ltorch_cuda -lc10
 # Source & Object files
 SRC = \
@@ -12,13 +12,14 @@ SRC = \
 	srcs/market/Market.cpp \
 	srcs/market/Order.cpp \
 	srcs/market/OrderBook.cpp \
+	srcs/main.cpp \
 
 OBJ = $(SRC:.cpp=.o)
 
 all: Market.out
 
 Market.out: $(OBJ)
-	@echo "need a main : g++ $(OBJ) -o $@ $(LDFLAGS) $(LDLIBS)"
+	g++ $(OBJ) -o $@ $(LDFLAGS) $(LDLIBS)
 
 %.o: %.cpp
 	g++ $(MYFLAGS) $(SYSFLAGS) -c $< -o $@
@@ -33,8 +34,8 @@ re: fclean all
 
 libtorch:
 	@echo "Downloading LibTorch..."
-	wget -O srcs/libtorch.zip "https://download.pytorch.org/libtorch/cu126/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcu126.zip"
-	unzip -q srcs/libtorch.zip -d srcs/
-	rm srcs/libtorch.zip
+	wget -O srcs/externalLibrary/libtorch.zip "https://download.pytorch.org/libtorch/cu126/libtorch-cxx11-abi-shared-with-deps-2.7.0%2Bcu126.zip"
+	unzip -q srcs/externalLibrary/libtorch.zip -d srcs/
+	rm srcs/externalLibrary/libtorch.zip
 
 .PHONY: clean fclean re libtorch

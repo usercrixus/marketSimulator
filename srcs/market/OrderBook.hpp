@@ -11,6 +11,7 @@ class OrderBook
 public:
     void processOrder(Order &order);
     void recordSnapShot();
+    void forceSnapshot(const std::map<double, std::list<Order>> &bids, const std::map<double, std::list<Order>> &asks, const std::vector<double> &trades);
 
     const std::map<double, std::list<Order>> &getBids() const;
     const std::map<double, std::list<Order>> &getAsks() const;

@@ -15,6 +15,10 @@ class Market
 public:
     Market(int epochs);
     /**
+     * init the market history with real data
+     */
+    bool initMarket();
+    /**
      * Register an agent that will be notified once per epoch.
      */
     void registerAgent(Agent &agent);
@@ -26,7 +30,7 @@ public:
      * Run all epochs in sequence: call agents → shuffle → match → clear
      */
     void run();
-    OrderBook getOrderBook() const;
+    const OrderBook &getOrderBook() const;
 
 private:
     int _epochs;                             // total number of epoch
@@ -34,5 +38,5 @@ private:
     std::vector<std::vector<Order>> _orders; // per-epoch order buckets
     OrderBook _orderBook;                    // the order book of the market
     std::vector<Agent *> _agents;            // subscribed agents
-    Statistics _statistics;                   // the market statistics
+    Statistics _statistics;                  // the market statistics
 };

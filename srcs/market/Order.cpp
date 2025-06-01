@@ -1,7 +1,7 @@
 #include "Order.hpp"
 #include "../agent/Agent.hpp"
 
-Order Order::makeLimit(int id, Side side, int quantity, double price, Agent *agent)
+Order Order::makePostOnlyLimit(int id, Side side, double quantity, double price, Agent *agent)
 {
     Order order;
     order.id = id;
@@ -14,7 +14,20 @@ Order Order::makeLimit(int id, Side side, int quantity, double price, Agent *age
     return order;
 }
 
-Order Order::makeMarket(int id, Side side, int quantity, Agent *agent)
+Order Order::makeLimit(int id, Side side, double quantity, double price, Agent *agent)
+{
+    Order order;
+    order.id = id;
+    order.type = Type::LIMIT;
+    order.side = side;
+    order.quantity = quantity;
+    order.price = price;
+    order.targetId = -1;
+    order.agent = agent;
+    return order;
+}
+
+Order Order::makeMarket(int id, Side side, double quantity, Agent *agent)
 {
     Order order;
     order.id = id;
