@@ -18,7 +18,7 @@ public:
 	TakerAgent();
 
 	void onEpoch(Statistics &statistics, Market &market) override;
-	void onReward() override;
+	void onReward(Statistics &statistics) override;
 
 private:
 	ModelLSTM model;

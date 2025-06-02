@@ -27,6 +27,10 @@ public:
      */
     void submitOrder(Order &order);
     /**
+     * 
+     */
+    void printStatus();
+    /**
      * Run all epochs in sequence: call agents → shuffle → match → clear
      */
     void run();

@@ -36,6 +36,7 @@ void OrderBook::matchMarket(Order &order)
 
 void OrderBook::matchMarketAgainst(Order &order, std::map<double, std::list<Order>> &providers, bool isBidSide)
 {
+    // std::cout << "try " << order.quantity << " " <<  !providers.empty() << std::endl;
     while (order.quantity > 0 && !providers.empty())
     {
         std::map<double, std::list<Order>>::iterator orderBookLevel = (isBidSide) ? std::prev(providers.end()) : providers.begin();
@@ -109,20 +110,20 @@ void OrderBook::matchPostOnlyLimit(const Order &order)
                 crossesBook = true;
         }
     }
-    if (crossesBook)
-        return;
-
-    if (order.side == Order::Side::BUY)
+    if (!crossesBook)
     {
-        std::list<Order> &levelList = _bids[order.price];
-        levelList.push_back(order);
-        order.agent->addPendingOrder(levelList.back());
-    }
-    else
-    {
-        auto &levelList = _asks[order.price];
-        levelList.push_back(order);
-        order.agent->addPendingOrder(levelList.back());
+        if (order.side == Order::Side::BUY)
+        {
+            std::list<Order> &levelList = _bids[order.price];
+            levelList.push_back(order);
+            order.agent->addPendingOrder(levelList.back());
+        }
+        else
+        {
+            auto &levelList = _asks[order.price];
+            levelList.push_back(order);
+            order.agent->addPendingOrder(levelList.back());
+        }
     }
 }
 
@@ -154,32 +155,39 @@ void OrderBook::cancel(const Order &order)
 
 void OrderBook::modify(const Order &order)
 {
-    std::map<double, std::list<Order>> &book = (order.side == Order::Side::BUY) ? _bids : _asks;
-    std::map<double, std::list<Order>>::iterator bookLevel = book.begin();
-    while (bookLevel != book.end())
+    auto &book = (order.side == Order::Side::BUY) ? _bids : _asks;
+
+    auto it = book.begin();
+    while (it != book.end())
     {
-        std::list<Order> &orderList = bookLevel->second;
-        std::list<Order>::iterator targetOrder = std::find_if(orderList.begin(), orderList.end(), [&](const Order &o)
-                                                              { return o.id == order.targetId; });
-        if (targetOrder != orderList.end())
+        auto &orderList = it->second;
+        auto targetIt = std::find_if(orderList.begin(), orderList.end(), [&](const Order &o)
+                                     { return o.id == order.targetId; });
+        if (targetIt != orderList.end())
         {
-            // Finally, insert the updated one at its new price
-            std::list<Order> &newList = book[order.price];
-            newList.push_back(Order::makeLimit(targetOrder->id, targetOrder->side, order.quantity, order.price, targetOrder->agent));
-            newList.back().agent->addPendingOrder(newList.back());
-            // Remove the old one from the agent’s pending list
-            targetOrder->agent->removePendingOrder(*targetOrder);
-            // Erase the old one from this price level
-            orderList.erase(targetOrder);
-            // If that level is now empty, remove the key from the map
-            if (orderList.empty())
-                bookLevel = book.erase(bookLevel);
+            if (targetIt->type == Order::Type::POST_ONLY_LIMIT)
+            {
+                Order repost = Order::makePostOnlyLimit(targetIt->id, targetIt->side, order.quantity, order.price, targetIt->agent);
+                matchPostOnlyLimit(repost);
+            }
             else
-                ++bookLevel;
+            {
+                Order relimit = Order::makeLimit(targetIt->id, targetIt->side, order.quantity, order.price, targetIt->agent);
+                matchLimit(relimit);
+            }
+
+            // Remove from the agent’s pending list:
+            if (targetIt->agent)
+                targetIt->agent->removePendingOrder(*targetIt);
+            // Erase from this price level:
+            orderList.erase(targetIt);
+            // If that price level is now empty, erase the map key:
+            if (orderList.empty())
+                it = book.erase(it);
             break;
         }
         else
-            ++bookLevel;
+            ++it;
     }
 }
 
@@ -188,18 +196,18 @@ void OrderBook::manageTrade(const Order &taker, const Order &maker, double price
     if (taker.side == Order::Side::BUY)
     {
         if (taker.agent)
-            taker.agent->incrementAsset(-1 * price * qty);
+            taker.agent->updatePosition(price, qty, Order::Side::BUY);
         if (maker.agent)
-            maker.agent->incrementAsset(price * qty);
+            maker.agent->updatePosition(price, qty, Order::Side::SELL);
         _trades.push_back(price * qty);
         // std::cout << "trade done, price: " << price << " quantity: " << qty << std::endl;
     }
     else
     {
         if (taker.agent)
-            taker.agent->incrementAsset(price * qty);
+            taker.agent->updatePosition(price, qty, Order::Side::SELL);
         if (maker.agent)
-            maker.agent->incrementAsset(-1 * price * qty);
+            maker.agent->updatePosition(price, qty, Order::Side::BUY);
         _trades.push_back(price * qty);
         // std::cout << "trade done, price: " << price << " quantity: " << qty << std::endl;
     }

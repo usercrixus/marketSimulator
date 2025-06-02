@@ -1,31 +1,16 @@
+// --- srcs/agent/Agent.cpp ---
 #include "Agent.hpp"
-#include "../statistics/Statistics.hpp"
 #include "../market/Order.hpp"
 
-Agent::Agent(): asset(100000), previousAsset(100000), isUpdated(false)
+Agent::Agent()
+    : cash(100000.0),
+      inventory(0.0),
+      prevNetValue(100000.0),
+      isUpdated(false)
 {
 }
 
-Agent::~Agent()
-{
-}
-
-void Agent::incrementAsset(double value)
-{
-    previousAsset = asset;
-	asset += value;
-    isUpdated = true;
-}
-
-void Agent::setAsset(double value)
-{
-    asset = value;
-}
-
-double Agent::getAsset()
-{
-    return (asset);
-}
+Agent::~Agent() {}
 
 void Agent::addPendingOrder(const Order &order)
 {
@@ -34,15 +19,51 @@ void Agent::addPendingOrder(const Order &order)
 
 void Agent::removePendingOrder(const Order &order)
 {
-    std::vector<const Order *>::iterator it = pendingsOrders.begin();
-    while (it != pendingsOrders.end())
+    for (auto it = pendingsOrders.begin(); it != pendingsOrders.end(); ++it)
     {
         if ((*it)->id == order.id)
         {
             pendingsOrders.erase(it);
             break;
         }
-        it++;
     }
 }
 
+void Agent::updatePosition(double price, double qty, Order::Side side)
+{
+    if (side == Order::Side::BUY)
+    {
+        inventory += qty;
+        cash -= price * qty;
+    }
+    else
+    {
+        inventory -= qty;
+        cash += price * qty;
+    }
+    isUpdated = true;
+}
+
+void Agent::reset()
+{
+    cash = 100000.0;
+    inventory = 0.0;
+    prevNetValue = 100000.0;
+    isUpdated = false;
+    pendingsOrders.clear();
+}
+
+double Agent::getNetValue(double midPrice) const
+{
+    return cash + inventory * midPrice;
+}
+
+double Agent::getCash() const
+{
+    return cash;
+}
+
+double Agent::getInventory() const
+{
+    return inventory;
+}

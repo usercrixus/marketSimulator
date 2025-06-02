@@ -67,6 +67,21 @@ void Market::submitOrder(Order &order)
     order.id = id++;
     _orders[_currentEpoch].push_back(order);
 }
+void Market::printStatus()
+{
+        double lastMid = _statistics.getMidPrices().empty()   ? 0.0 : _statistics.getMidPrices().back();
+        double lastAsk = _statistics.getBestAsks().empty()   ? 0.0 : _statistics.getBestAsks().back();
+        double lastBid = _statistics.getBestBids().empty()   ? 0.0 : _statistics.getBestBids().back();
+        double lastSpd = _statistics.getSpreads().empty()    ? 0.0 : _statistics.getSpreads().back();
+
+        std::cout
+            << "Epoch: " << _currentEpoch << "/" << _epochs
+            << " midPrice: " << lastMid
+            << " bestAsk: " << lastAsk
+            << " bestBid: " << lastBid
+            << " spread: "  << lastSpd
+            << std::endl;
+}
 
 void Market::run()
 {
@@ -75,27 +90,27 @@ void Market::run()
 
     for (_currentEpoch = 0; _currentEpoch < _epochs; ++_currentEpoch)
     {
-        std::cout << "Epoch: " << _currentEpoch << "/" << _epochs << " midPrice: " << _statistics.getMidPrices().back() << std::endl;
-        // give each agent a chance to look at the book & submit
+        printStatus();
+        // 1) Give each agent one chance to submit/modify orders:
         for (auto *agent : _agents)
             agent->onEpoch(_statistics, *this);
-        // grab this epoch’s bucket
+        // 2) Collect and shuffle this epoch’s orders:
         std::vector<Order> &bucket = _orders[_currentEpoch];
-        // shuffle for fairness
         std::shuffle(bucket.begin(), bucket.end(), gen);
-        // process
+        // 3) Process each Order in the shuffled bucket:
         for (Order &order : bucket)
             _orderBook.processOrder(order);
-        // clear for memory management
+        // 4) Clear that bucket (for memory) and record a fresh snapshot:
         bucket.clear();
-        // record a snapshot of the orderbook for statistics
+        // 5) record the order book snapshot
         _orderBook.recordSnapShot();
-        // record the statistics
+        // 6) Update our statistics (mid/bid/ask/spread) for this new snapshot:
         _statistics.record(_orderBook);
-        // reward the agent
-        for (auto *agent : _agents)
-            agent->onReward();
-    }
+ }
+
+    // 7) After all _epochs_ are complete, cll every agent’s onReward():
+    for (auto *agent : _agents)
+        agent->onReward(_statistics);
 }
 
 const OrderBook &Market::getOrderBook() const

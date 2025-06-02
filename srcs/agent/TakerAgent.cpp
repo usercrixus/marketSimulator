@@ -1,4 +1,3 @@
-// TakerAgent.cpp
 #include <torch/torch.h>
 #include "TakerAgent.hpp"
 #include "../statistics/Statistics.hpp"
@@ -6,7 +5,7 @@
 #include <algorithm>
 
 TakerAgent::TakerAgent()
-    : Agent(), model(4, 2)
+    : Agent(), model(4, 3) // outputSize = 3 now
 {
     model.to(device, torch::kFloat32);
     optimizer_ = std::make_unique<torch::optim::Adam>(model.parameters(), 1e-4);
@@ -22,6 +21,7 @@ void TakerAgent::onEpoch(Statistics &statistics, Market &market)
     if (midDeque.size() < 100 || bidDeque.size() < 100 || askDeque.size() < 100 || spdDeque.size() < 100)
         return;
 
+    // Normalize each deque to [-1,1]
     std::vector<double> normMid = Statistics::normalizeDeque(midDeque);
     std::vector<double> normBids = Statistics::normalizeDeque(bidDeque);
     std::vector<double> normAsks = Statistics::normalizeDeque(askDeque);
@@ -37,50 +37,62 @@ void TakerAgent::onEpoch(Statistics &statistics, Market &market)
         flat_data.push_back(static_cast<float>(normSpd[t]));
     }
 
-    auto seq100x4 = torch::tensor(flat_data, torch::TensorOptions().dtype(torch::kFloat32)).view({100, 4});
-    auto input = seq100x4.unsqueeze(0);
+    auto seq100x4 = torch::tensor(
+                        flat_data,
+                        torch::TensorOptions().dtype(torch::kFloat32).device(device))
+                        .view({100, 4});
+    auto input = seq100x4.unsqueeze(0); // shape [1, 100, 4]
 
-    auto out = model.forward(input);
-    lastOut = out;
+    auto logits = model.forward(input);
+    lastOut = logits.cpu();
     isUpdated = true;
 
-    float bidNorm = out[0][0].item<float>();
-    float askNorm = out[0][1].item<float>();
+    auto probs = torch::softmax(logits, 1);
+    int action_idx = std::get<1>(probs.max(1)).item<int>();
 
-    auto mn_mid = *std::min_element(midDeque.begin(), midDeque.end());
-    auto mx_mid = *std::max_element(midDeque.begin(), midDeque.end());
-    float range_mid = static_cast<float>(mx_mid - mn_mid);
-
-    double bidPrice = ((bidNorm + 1.0f) / 2.0f) * range_mid + static_cast<float>(mn_mid);
-    double askPrice = ((askNorm + 1.0f) / 2.0f) * range_mid + static_cast<float>(mn_mid);
-
+    // random quantity
     static thread_local std::mt19937 gen{
         static_cast<unsigned long>(
             std::chrono::high_resolution_clock::now()
                 .time_since_epoch()
-                .count())};
+                .count())
+    };
     std::uniform_real_distribution<float> dist(0.1f, 0.3f);
     double quantity = dist(gen);
 
-    Order buyOrder = Order::makeLimit(-1, Order::Side::BUY, quantity, bidPrice, this);
-    Order sellOrder = Order::makeLimit(-1, Order::Side::SELL, quantity, askPrice, this);
-    market.submitOrder(buyOrder);
-    market.submitOrder(sellOrder);
-    previousAsset = asset;
+    if (action_idx == 0) {
+        // immediately buy at market
+        Order buyOrder = Order::makeMarket(-1, Order::Side::BUY, quantity, this);
+        market.submitOrder(buyOrder);
+    }
+    else if (action_idx == 1) {
+        // immediately sell at market
+        Order sellOrder = Order::makeMarket(-1, Order::Side::SELL, quantity, this);
+        market.submitOrder(sellOrder);
+    }
 }
 
-void TakerAgent::onReward()
+void TakerAgent::onReward(Statistics &statistics)
 {
-    if (!isUpdated)
-        return;
+    if (!isUpdated) return;
 
-    double reward = asset - previousAsset;
+    double finalMid = statistics.getMidPrices().back();
+    double newNet   = getNetValue(finalMid);
+    double reward   = newNet - prevNetValue;
+    prevNetValue    = newNet;
+    isUpdated       = false;
+
     auto rewardTensor = torch::tensor(
         static_cast<float>(reward),
-        torch::TensorOptions().dtype(torch::kFloat32));
-    auto loss = -rewardTensor * lastOut.sum();
+        torch::TensorOptions().dtype(torch::kFloat32)
+    );
+    auto log_probs = torch::log_softmax(lastOut, /*dim=*/1);
+    auto chosen_index_tensor = std::get<1>(log_probs.exp().max(/*dim=*/1));
+    int  chosen_idx = chosen_index_tensor.item<int>();
+    auto chosen_logprob = log_probs[0][chosen_idx];
+    auto loss = -chosen_logprob * rewardTensor;
+
     optimizer_->zero_grad();
     loss.backward();
     optimizer_->step();
-    isUpdated = false;
 }

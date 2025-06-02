@@ -1,36 +1,66 @@
+// --- srcs/main.cpp ---
 #include "market/Market.hpp"
-#include "agent/Agent.hpp"
 #include "agent/MarketMakerAgent.hpp"
 #include "agent/TakerAgent.hpp"
+#include <iostream>
 
 int main()
 {
-    std::vector<MarketMakerAgent> marketMakerAgent;
-    marketMakerAgent.reserve(100);
+    // 1) Create 20 market‐makers and 80 takers
+    std::vector<MarketMakerAgent> mmAgents;
+    mmAgents.reserve(20);
     for (int i = 0; i < 20; i++)
-        marketMakerAgent.emplace_back();
+        mmAgents.emplace_back();
 
-    std::vector<TakerAgent> takerAgent;
-    takerAgent.reserve(100);
+    std::vector<TakerAgent> takerAgents;
+    takerAgents.reserve(80);
     for (int i = 0; i < 80; i++)
-        takerAgent.emplace_back();
+        takerAgents.emplace_back();
 
-    int epoch = 0;
-    while (epoch < 1000)
+    // 2) Repeat “mini‐markets” 1000 times
+    for (int iteration = 0; iteration < 1000; ++iteration)
     {
+        std::cout << "\n==== Starting mini-market #" << iteration << " ====\n";
+
+        // Before each 100-step run, reset every agent
+        for (auto &m : mmAgents)    m.reset();
+        for (auto &t : takerAgents) t.reset();
+
+        // Build a fresh Market with 100 steps
         Market market(100);
-        for (auto &agent : marketMakerAgent)
-            market.registerAgent(agent);
-        for (auto &agent : takerAgent)
-            market.registerAgent(agent);
-        if (!market.initMarket())
-            return (std::cout << "failed to init the market" << std::endl, 1);
-        else
-            std::cout << "Market initialized" << std::endl;
+
+        // Register all agents
+        for (auto &m : mmAgents)    market.registerAgent(m);
+        for (auto &t : takerAgents) market.registerAgent(t);
+
+        if (!market.initMarket()) {
+            std::cerr << "Failed to init the market\n";
+            return 1;
+        }
+        std::cout << "Market initialized\n";
+
+        // Run the 100-step simulation (rewards happen only at the end)
         market.run();
-        for (auto &agent : marketMakerAgent)
-            std::cout << "agent asset:" << agent.getAsset() << std::endl;
-        epoch++;
+
+        // Print out each agent’s final net‐worth:
+        //   We’ll use the final best ask as a stand-in for “current mid.”
+        double finalMid = market.getOrderBook().getAsksSnapShots().back().begin()->first;
+        std::cout << "→ Market-makers:\n";
+        for (auto &m : mmAgents) {
+            double net = m.getCash() + m.getInventory() * finalMid;
+            std::cout << "   net = " << net
+                      << "  (cash=" << m.getCash()
+                      << ", inv=" << m.getInventory() << ")\n";
+        }
+
+        std::cout << "→ Takers:\n";
+        for (auto &t : takerAgents) {
+            double net = t.getCash() + t.getInventory() * finalMid;
+            std::cout << "   net = " << net
+                      << "  (cash=" << t.getCash()
+                      << ", inv=" << t.getInventory() << ")\n";
+        }
     }
+
     return 0;
 }

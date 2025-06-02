@@ -1,5 +1,5 @@
 # Flags
-MYFLAGS = -std=c++17 -Wall -Wextra -Werror
+MYFLAGS = -std=c++17 -g -Wall -Wextra -Werror
 SYSFLAGS = -isystem srcs/externalLibrary/libtorch/include -isystem srcs/externalLibrary/libtorch/include/torch/csrc/api/include -Isrcs/externalLibrary/nlohmann 
 # Linking
 LDFLAGS = -Lsrc/externalLibrary/nlohmann -Lsrcs/externalLibrary/libtorch/lib -Wl,-rpath=srcs/externalLibrary/libtorch/lib
