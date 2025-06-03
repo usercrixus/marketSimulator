@@ -9,7 +9,8 @@
 class Order;
 class Market;
 
-class MarketMakerAgent : public Agent {
+class MarketMakerAgent : public Agent
+{
 public:
     MarketMakerAgent();
     // build input 1d tensor from statistics deque
@@ -25,7 +26,7 @@ public:
 
 private:
     ModelLSTM model;
-    torch::Device device = torch::kCPU;
     std::unique_ptr<torch::optim::Adam> optimizer_;
     std::vector<torch::Tensor> outputHistory;
+    torch::Device device;
 };

@@ -32,6 +32,8 @@ Asset tracking per agent.
 
 Install torch (ubuntu): 
 Make libtorch  
+Install cuda for GPU:  
+https://developer.nvidia.com/cuda-12-6-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=24.04&target_type=deb_network
   
 Then all is ok.  
   

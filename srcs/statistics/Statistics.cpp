@@ -88,11 +88,20 @@ void Statistics::recordSpread(OrderBook &orderBook)
     trim(spreads);
 }
 
+void Statistics::recordTrade(OrderBook &orderBook)
+{
+    auto trades = orderBook.getTradeSnapShots();
+    if (!trades.empty() && !trades.back().empty())
+        _trades.push_back(trades.back()[0]);
+    trim(_trades);
+}
+
 void Statistics::record(OrderBook &orderBook)
 {
     recordMidPrice(orderBook);
     recordBestPrices(orderBook);
     recordSpread(orderBook);
+    recordTrade(orderBook);
 }
 
 void Statistics::initStats(OrderBook &orderBook)

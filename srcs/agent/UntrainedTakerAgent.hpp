@@ -12,10 +12,10 @@ class Market;
  * RandomAgent’s network now outputs 6 Q‐values (for 6 discrete actions).
  * Each action maps to a (side, price) pair as described below.
  */
-class TakerAgent : public Agent
+class UntrainedTakerAgent : public Agent
 {
 public:
-	TakerAgent();
+	UntrainedTakerAgent();
 
 	void onStepBegin(Statistics &statistics, Market &market) override;
     // Called every sub‐step (100 times per mini‐market)

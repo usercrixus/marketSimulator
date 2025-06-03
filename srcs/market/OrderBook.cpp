@@ -6,6 +6,7 @@
 
 void OrderBook::processOrder(Order &order)
 {
+    std::lock_guard<std::mutex> lock(_ordersMutex);
     switch (order.type)
     {
     case Order::Type::MARKET:
@@ -178,7 +179,6 @@ void OrderBook::manageTrade(const Order &taker, const Order &maker, double price
             taker.agent->updatePosition(price, qty, Order::Side::BUY);
         if (maker.agent)
             maker.agent->updatePosition(price, qty, Order::Side::SELL);
-        _trades.push_back(price * qty);
     }
     else
     {
@@ -186,9 +186,8 @@ void OrderBook::manageTrade(const Order &taker, const Order &maker, double price
             taker.agent->updatePosition(price, qty, Order::Side::SELL);
         if (maker.agent)
             maker.agent->updatePosition(price, qty, Order::Side::BUY);
-        _trades.push_back(price * qty);
     }
-    // std::cout << "trade done, price: " << price << " quantity: " << qty << std::endl;
+    _trades.push_back(qty);
 }
 
 bool OrderBook::removeOrder(std::list<Order>::iterator &order, std::list<Order> &orderList, std::map<double, std::list<Order>>::iterator &bookLevel, std::map<double, std::list<Order>> &book)
@@ -207,8 +206,14 @@ void OrderBook::recordSnapShot()
 {
     _bidsSnapShots.push_back(_bids);
     _asksSnapShots.push_back(_asks);
+    if (_trades.empty())
+        _trades.push_back(0.0);
     _tradeSnapShots.push_back(_trades);
     _trades.clear();
+
+    trim(_bidsSnapShots);
+    trim(_asksSnapShots);
+    trim(_tradeSnapShots);
 }
 
 void OrderBook::forceSnapshot(const std::map<double, std::list<Order>> &bids, const std::map<double, std::list<Order>> &asks, const std::vector<double> &trades)
@@ -216,6 +221,10 @@ void OrderBook::forceSnapshot(const std::map<double, std::list<Order>> &bids, co
     _bidsSnapShots.push_back(bids);
     _asksSnapShots.push_back(asks);
     _tradeSnapShots.push_back(trades);
+
+    trim(_bidsSnapShots);
+    trim(_asksSnapShots);
+    trim(_tradeSnapShots);
 }
 
 void OrderBook::printBook()
@@ -238,17 +247,17 @@ const std::map<double, std::list<Order>> &OrderBook::getAsks() const
     return _asks;
 }
 
-const std::vector<std::map<double, std::list<Order>>> &OrderBook::getBidsSnapShots() const
+const std::deque<std::map<double, std::list<Order>>> &OrderBook::getBidsSnapShots() const
 {
     return _bidsSnapShots;
 }
 
-const std::vector<std::map<double, std::list<Order>>> &OrderBook::getAsksSnapShots() const
+const std::deque<std::map<double, std::list<Order>>> &OrderBook::getAsksSnapShots() const
 {
     return _asksSnapShots;
 }
 
-const std::vector<std::vector<double>> &OrderBook::getTradeSnapShots() const
+const std::deque<std::vector<double>> &OrderBook::getTradeSnapShots() const
 {
     return _tradeSnapShots;
 }

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <random>
 #include <algorithm>
+#include <thread>
+#include <mutex>
 #include "Order.hpp"
 #include "OrderBook.hpp"
 #include "../statistics/Statistics.hpp"
@@ -34,7 +36,9 @@ public:
      * Run all epochs in sequence: call agents → shuffle → match → clear
      */
     void run();
+
     const OrderBook &getOrderBook() const;
+    const Statistics &getStatistics() const;
 
 private:
     int _epochs;                             // total number of epoch
@@ -43,4 +47,5 @@ private:
     OrderBook _orderBook;                    // the order book of the market
     std::vector<Agent *> _agents;            // subscribed agents
     Statistics _statistics;                  // the market statistics
+    std::mutex _ordersMutex;
 };

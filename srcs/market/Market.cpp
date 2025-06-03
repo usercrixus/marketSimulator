@@ -4,13 +4,16 @@
 #include <fstream>
 #include <algorithm>
 #include <random>
+#include <iostream>
+#include <thread> // for std::thread
+#include <mutex>  // for std::lock_guard
 #include <json.hpp>
 using Json = nlohmann::json;
 
 Market::Market(int epochs)
     : _epochs(epochs),
       _currentEpoch(0),
-      _orders(epochs)
+      _orders(epochs) // allocate one vector<Order> per epoch
 {
 }
 
@@ -50,11 +53,11 @@ bool Market::initMarket()
         std::vector<double> tradeVec;
         for (const auto &trade : stepElement.at("trades"))
         {
-            double price = trade.at("price").get<double>();
             double qty = trade.at("qty").get<double>();
-            tradeVec.push_back(price * qty);
+            tradeVec.push_back(qty);
         }
 
+        // Push exactly one forced snapshot per JSON object
         _orderBook.forceSnapshot(bidsMap, asksMap, tradeVec);
     }
 
@@ -69,6 +72,7 @@ void Market::registerAgent(Agent &agent)
 
 void Market::submitOrder(Order &order)
 {
+    std::lock_guard<std::mutex> lock(_ordersMutex);
     static int id = 0;
     order.id = id++;
     _orders[_currentEpoch].push_back(order);
@@ -80,13 +84,15 @@ void Market::printStatus()
     double lastAsk = _statistics.getBestAsks().empty() ? 0.0 : _statistics.getBestAsks().back();
     double lastBid = _statistics.getBestBids().empty() ? 0.0 : _statistics.getBestBids().back();
     double lastSpd = _statistics.getSpreads().empty() ? 0.0 : _statistics.getSpreads().back();
+    double lastTrade = _statistics.getTrades().empty() ? 0.0 : _statistics.getTrades().back();
 
     std::cout
         << "Epoch: " << _currentEpoch << "/" << _epochs
         << "  midPrice: " << lastMid
-        << "  bestAsk: " << lastAsk
-        << "  bestBid: " << lastBid
-        << "  spread: " << lastSpd
+        << "  bestAsk:   " << lastAsk
+        << "  bestBid:   " << lastBid
+        << "  spread:    " << lastSpd
+        << "  trades:    " << lastTrade
         << std::endl;
 }
 
@@ -101,21 +107,32 @@ void Market::run()
 
         std::vector<Agent *> shuffledAgents = _agents;
         std::shuffle(shuffledAgents.begin(), shuffledAgents.end(), gen);
-        for (Agent *agent : shuffledAgents)
-        {
-            agent->onStepBegin(_statistics, *this);
-            std::vector<Order> &orders = _orders[_currentEpoch];
-            if (!orders.empty())
-            {
-                for (Order &order : orders)
-                    _orderBook.processOrder(order);
-                orders.clear();
 
-                _orderBook.recordSnapShot();
-                _statistics.record(_orderBook);
-            }
-            agent->onEndStep(_statistics);
-        }
+        std::vector<std::thread> beginThreads;
+        beginThreads.reserve(shuffledAgents.size());
+        for (Agent *agent : shuffledAgents)
+            beginThreads.emplace_back([agent, this]()
+                                      { agent->onStepBegin(_statistics, *this); });
+
+        for (auto &t : beginThreads)
+            t.join();
+
+        std::vector<Order> ordersToProcess;
+        ordersToProcess.swap(_orders[_currentEpoch]);
+
+        for (Order &order : ordersToProcess)
+            _orderBook.processOrder(order);
+
+        _orderBook.recordSnapShot();
+        _statistics.record(_orderBook);
+
+        std::vector<std::thread> endThreads;
+        endThreads.reserve(shuffledAgents.size());
+        for (Agent *agent : shuffledAgents)
+            endThreads.emplace_back([agent, this]()
+                                    { agent->onEndStep(_statistics); });
+        for (auto &t : endThreads)
+            t.join();
     }
     for (Agent *agentPtr : _agents)
         agentPtr->onEpoch(_statistics);
@@ -124,4 +141,9 @@ void Market::run()
 const OrderBook &Market::getOrderBook() const
 {
     return _orderBook;
+}
+
+const Statistics &Market::getStatistics() const
+{
+    return (_statistics);
 }

@@ -6,7 +6,7 @@
 #include <algorithm>
 
 MarketMakerAgent::MarketMakerAgent()
-    : Agent(), model(4, 2)
+    : Agent(), model(4, 2), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU)
 {
     model.to(device, torch::kFloat32);
     optimizer_ = std::make_unique<torch::optim::Adam>(model.parameters(), 1e-4);
@@ -104,7 +104,7 @@ void MarketMakerAgent::onEpoch(Statistics &statistics)
 {
     double reward;
     if (!isUpdated)
-        reward = -1000; // If the agent never actually placed anything in any of the 100 steps,
+        reward = -10; // If the agent never actually placed anything in any of the 100 steps,
     else
     {
         // 1) Compute final mid‐price (from the last snapshot)
@@ -115,7 +115,10 @@ void MarketMakerAgent::onEpoch(Statistics &statistics)
         // 3) Reward is the difference over the last epoch:
         reward = newNet - prevNetValue;
     }
-    torch::Tensor totalLoss = torch::zeros({1}, torch::kFloat32);
+    torch::Tensor totalLoss = torch::zeros(
+        {1},
+        torch::TensorOptions().dtype(torch::kFloat32).device(device)
+    );
     for (auto &stepLogits : outputHistory)
         totalLoss += -static_cast<float>(reward) * stepLogits.sum();
     optimizer_->zero_grad();

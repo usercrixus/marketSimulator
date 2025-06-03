@@ -2,7 +2,9 @@
 
 #include <map>
 #include <list>
+#include <deque>
 #include <vector>
+#include <mutex>
 #include <algorithm>
 #include "Order.hpp"
 
@@ -16,17 +18,20 @@ public:
 
     const std::map<double, std::list<Order>> &getBids() const;
     const std::map<double, std::list<Order>> &getAsks() const;
-    const std::vector<std::map<double, std::list<Order>>> &getBidsSnapShots() const;
-    const std::vector<std::map<double, std::list<Order>>> &getAsksSnapShots() const;
-    const std::vector<std::vector<double>> &getTradeSnapShots() const;
+    const std::deque<std::map<double, std::list<Order>>> &getBidsSnapShots() const;
+    const std::deque<std::map<double, std::list<Order>>> &getAsksSnapShots() const;
+    const std::deque<std::vector<double>> &getTradeSnapShots() const;
 
 private:
     std::map<double, std::list<Order>> _bids;
     std::map<double, std::list<Order>> _asks;
     std::vector<double> _trades;
-    std::vector<std::map<double, std::list<Order>>> _bidsSnapShots;
-    std::vector<std::map<double, std::list<Order>>> _asksSnapShots;
-    std::vector<std::vector<double>> _tradeSnapShots;
+    std::deque<std::map<double, std::list<Order>>> _bidsSnapShots;
+    std::deque<std::map<double, std::list<Order>>> _asksSnapShots;
+    std::deque<std::vector<double>> _tradeSnapShots;
+
+    static constexpr size_t maxSnapshots = 100;
+    std::mutex _ordersMutex;
 
     void matchMarket(Order &order);
     void matchLimit(Order &order);
@@ -40,4 +45,13 @@ private:
      * @return true if the book book level was incremented (meaning the order list was empty after the remove of the order)
      */
     bool removeOrder(std::list<Order>::iterator &order, std::list<Order> &orderList, std::map<double, std::list<Order>>::iterator &bookLevel, std::map<double, std::list<Order>> &book);
+    template<typename any>
+    void trim(std::deque<any> &data);
 };
+
+template<typename any>
+void OrderBook::trim(std::deque<any> &data)
+{
+    while (data.size() > maxSnapshots)
+        data.pop_front();
+}

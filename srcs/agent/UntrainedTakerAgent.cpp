@@ -1,17 +1,17 @@
 #include <torch/torch.h>
-#include "TakerAgent.hpp"
+#include "UntrainedTakerAgent.hpp"
 #include "../statistics/Statistics.hpp"
 #include "../market/Market.hpp"
 #include <algorithm>
 
-TakerAgent::TakerAgent()
+UntrainedTakerAgent::UntrainedTakerAgent()
     : Agent(), model(4, 3), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU)
 {
     model.to(device, torch::kFloat32);
     optimizer_ = std::make_unique<torch::optim::Adam>(model.parameters(), 1e-4);
 }
 
-void TakerAgent::onStepBegin(Statistics &statistics, Market &market)
+void UntrainedTakerAgent::onStepBegin(Statistics &statistics, Market &market)
 {
     const auto &midDeque = statistics.getMidPrices();
     const auto &bidDeque = statistics.getBestBids();
@@ -73,32 +73,13 @@ void TakerAgent::onStepBegin(Statistics &statistics, Market &market)
     }
 }
 
-void TakerAgent::onEndStep(Statistics &statistics)
+void UntrainedTakerAgent::onEndStep(Statistics &statistics)
 {
-    if (!isUpdated)
-        return;
-
-    double finalMid = statistics.getMidPrices().back();
-    double newNet = getNetValue(finalMid);
-    double reward = newNet - prevNetValue;
-    prevNetValue = newNet;
-    isUpdated = false;
-
-    auto rewardTensor = torch::tensor(
-        static_cast<float>(reward),
-        torch::TensorOptions().dtype(torch::kFloat32));
-    auto log_probs = torch::log_softmax(lastOut, /*dim=*/1);
-    auto chosen_index_tensor = std::get<1>(log_probs.exp().max(/*dim=*/1));
-    int chosen_idx = chosen_index_tensor.item<int>();
-    auto chosen_logprob = log_probs[0][chosen_idx];
-    auto loss = -chosen_logprob * rewardTensor;
-
-    optimizer_->zero_grad();
-    loss.backward();
-    optimizer_->step();
+    (void)statistics;
+    // do nothing
 }
 
-void TakerAgent::onEpoch(Statistics &statistics)
+void UntrainedTakerAgent::onEpoch(Statistics &statistics)
 {
     (void)statistics;
     // do nothing
