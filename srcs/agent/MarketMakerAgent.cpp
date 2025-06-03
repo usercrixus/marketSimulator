@@ -72,7 +72,7 @@ void MarketMakerAgent::manageOrder(Market &market, double quantity, double bidPr
     }
 }
 
-void MarketMakerAgent::onStep(Statistics &statistics, Market &market)
+void MarketMakerAgent::onStepBegin(Statistics &statistics, Market &market)
 {
     auto input = buildInputTensor(statistics);
     auto out = model.forward(input);

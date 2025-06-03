@@ -72,7 +72,7 @@ void UntrainedMarketMakerAgent::manageOrder(Market &market, double quantity, dou
     }
 }
 
-void UntrainedMarketMakerAgent::onStep(Statistics &statistics, Market &market)
+void UntrainedMarketMakerAgent::onStepBegin(Statistics &statistics, Market &market)
 {
     auto input = buildInputTensor(statistics);
     auto out = model.forward(input);

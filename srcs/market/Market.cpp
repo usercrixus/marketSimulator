@@ -17,7 +17,8 @@ Market::Market(int epochs)
 bool Market::initMarket()
 {
     std::ifstream inFile("./utils/scrapper/binance_snapshots_clean.json");
-    if (!inFile.is_open()) {
+    if (!inFile.is_open())
+    {
         std::cerr << "ERROR: could not open binance_snapshots_clean.json\n";
         return false;
     }
@@ -32,7 +33,7 @@ bool Market::initMarket()
         for (const auto &bidsLevel : stepElement.at("bids"))
         {
             double price = bidsLevel.at(0).get<double>();
-            double qty   = bidsLevel.at(1).get<double>();
+            double qty = bidsLevel.at(1).get<double>();
             Order order = Order::makeLimit(-1, Order::Side::BUY, qty, price, nullptr);
             bidsMap[price].push_back(std::move(order));
         }
@@ -41,7 +42,7 @@ bool Market::initMarket()
         for (const auto &asksLevel : stepElement.at("asks"))
         {
             double price = asksLevel.at(0).get<double>();
-            double qty   = asksLevel.at(1).get<double>();
+            double qty = asksLevel.at(1).get<double>();
             Order o = Order::makeLimit(-1, Order::Side::SELL, qty, price, nullptr);
             asksMap[price].push_back(std::move(o));
         }
@@ -50,7 +51,7 @@ bool Market::initMarket()
         for (const auto &trade : stepElement.at("trades"))
         {
             double price = trade.at("price").get<double>();
-            double qty   = trade.at("qty").get<double>();
+            double qty = trade.at("qty").get<double>();
             tradeVec.push_back(price * qty);
         }
 
@@ -75,17 +76,17 @@ void Market::submitOrder(Order &order)
 
 void Market::printStatus()
 {
-    double lastMid = _statistics.getMidPrices().empty()   ? 0.0 : _statistics.getMidPrices().back();
-    double lastAsk = _statistics.getBestAsks().empty()    ? 0.0 : _statistics.getBestAsks().back();
-    double lastBid = _statistics.getBestBids().empty()    ? 0.0 : _statistics.getBestBids().back();
-    double lastSpd = _statistics.getSpreads().empty()     ? 0.0 : _statistics.getSpreads().back();
+    double lastMid = _statistics.getMidPrices().empty() ? 0.0 : _statistics.getMidPrices().back();
+    double lastAsk = _statistics.getBestAsks().empty() ? 0.0 : _statistics.getBestAsks().back();
+    double lastBid = _statistics.getBestBids().empty() ? 0.0 : _statistics.getBestBids().back();
+    double lastSpd = _statistics.getSpreads().empty() ? 0.0 : _statistics.getSpreads().back();
 
     std::cout
         << "Epoch: " << _currentEpoch << "/" << _epochs
-        << "  midPrice: "  << lastMid
-        << "  bestAsk: "   << lastAsk
-        << "  bestBid: "   << lastBid
-        << "  spread: "    << lastSpd
+        << "  midPrice: " << lastMid
+        << "  bestAsk: " << lastAsk
+        << "  bestBid: " << lastBid
+        << "  spread: " << lastSpd
         << std::endl;
 }
 
@@ -94,59 +95,30 @@ void Market::run()
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    // 1) For each epoch (mini‐market) from 0 to _epochs‐1:
     for (_currentEpoch = 0; _currentEpoch < _epochs; ++_currentEpoch)
     {
-        // a) Print the current book/stat snapshot:
         printStatus();
 
-        // b) Shuffle the agent pointers so that, this epoch, they trade in a random order:
-        std::vector<Agent*> shuffledAgents = _agents;
+        std::vector<Agent *> shuffledAgents = _agents;
         std::shuffle(shuffledAgents.begin(), shuffledAgents.end(), gen);
-
-        // c) Give each agent exactly one turn, in shuffled order:
-        for (Agent *agentPtr : shuffledAgents)
+        for (Agent *agent : shuffledAgents)
         {
-            // i) Let the agent “see” the current statistics/ book and submit/modify orders
-            agentPtr->onStep(_statistics, *this);
-
-            // ii) Immediately process whatever orders that agent just submitted
-            //     (we assume submitOrder(...) appended to _orders[_currentEpoch])
-            auto &bucket = _orders[_currentEpoch];
-            if (!bucket.empty())
+            agent->onStepBegin(_statistics, *this);
+            std::vector<Order> &orders = _orders[_currentEpoch];
+            if (!orders.empty())
             {
-                // You can shuffle this agent’s own orders if you want them in random order:
-                std::shuffle(bucket.begin(), bucket.end(), gen);
+                for (Order &order : orders)
+                    _orderBook.processOrder(order);
+                orders.clear();
 
-                for (Order &ord : bucket) {
-                    _orderBook.processOrder(ord);
-                }
-                bucket.clear();
-
-                // Since the book changed, update snapshot/statistics now,
-                // so that the next agent in shuffledAgents sees a fresh book.
                 _orderBook.recordSnapShot();
                 _statistics.record(_orderBook);
             }
-
-            // iii) Call onEndStep(...) for that agent, if it needs to learn per‐step:
-            agentPtr->onEndStep(_statistics);
+            agent->onEndStep(_statistics);
         }
-
-        // d) At the end of this epoch, you may want exactly one final snapshot:
-        //    (If you’ve been calling recordSnapShot() after each order above,
-        //     you already have the latest snapshot. But if you only want one per
-        //     epoch, uncomment the lines below instead of recording inside the loop.)
-        //
-        // _orderBook.recordSnapShot();
-        // _statistics.record(_orderBook);
     }
-
-    // 2) Once all epochs (mini‐markets) are done, call onEpoch(...) on every agent exactly once:
     for (Agent *agentPtr : _agents)
-    {
         agentPtr->onEpoch(_statistics);
-    }
 }
 
 const OrderBook &Market::getOrderBook() const

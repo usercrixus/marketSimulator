@@ -11,7 +11,7 @@ TakerAgent::TakerAgent()
     optimizer_ = std::make_unique<torch::optim::Adam>(model.parameters(), 1e-4);
 }
 
-void TakerAgent::onStep(Statistics &statistics, Market &market)
+void TakerAgent::onStepBegin(Statistics &statistics, Market &market)
 {
     const auto &midDeque = statistics.getMidPrices();
     const auto &bidDeque = statistics.getBestBids();

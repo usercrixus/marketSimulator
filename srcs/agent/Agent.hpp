@@ -22,7 +22,7 @@ public:
     virtual ~Agent();
 
     // Called once per “step” to let the agent submit/modify orders:
-    virtual void onStep(Statistics &statistics, Market &market) = 0;
+    virtual void onStepBegin(Statistics &statistics, Market &market) = 0;
 
     // Called once per “step” to let the agent submit/modify orders:
     virtual void onEndStep(Statistics &statistics) = 0;

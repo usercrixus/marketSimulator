@@ -17,7 +17,7 @@ class TakerAgent : public Agent
 public:
 	TakerAgent();
 
-	void onStep(Statistics &statistics, Market &market) override;
+	void onStepBegin(Statistics &statistics, Market &market) override;
     // Called every sub‐step (100 times per mini‐market)
     void onEpoch(Statistics &statistics) override;
     // Called every sub‐step (100 times per mini‐market)

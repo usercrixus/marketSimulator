@@ -17,7 +17,7 @@ public:
     // manage market maker limit order (modify or set)
     void manageOrder(Market &market, double quantity, double bidPrice, double askPrice);
     // Called every sub‐step (100 times per mini‐market)
-    void onStep(Statistics &statistics, Market &market) override;
+    void onStepBegin(Statistics &statistics, Market &market) override;
     // Called every sub‐step (100 times per mini‐market)
     void onEndStep(Statistics &statistics) override;
     // Called every sub‐step (100 times per mini‐market)
