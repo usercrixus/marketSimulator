@@ -22,10 +22,13 @@ public:
     virtual ~Agent();
 
     // Called once per “step” to let the agent submit/modify orders:
-    virtual void onEpoch(Statistics &statistics, Market &market) = 0;
+    virtual void onStep(Statistics &statistics, Market &market) = 0;
+
+    // Called once per “step” to let the agent submit/modify orders:
+    virtual void onEndStep(Statistics &statistics) = 0;
 
     // Called exactly once, after 100 steps, so that agent can compute reward:
-    virtual void onReward(Statistics &statistics) = 0;
+    virtual void onEpoch(Statistics &statistics) = 0;
 
     // Reset all internal state (cash/inventory/prevNetValue/pending orders)
     virtual void reset();

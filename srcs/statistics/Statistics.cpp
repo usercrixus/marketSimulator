@@ -158,3 +158,10 @@ std::vector<double> Statistics::normalizeDeque(const std::deque<double> &data)
     }
     return result;
 }
+
+double Statistics::unNormalize(double value, double max, double min)
+{
+    double mid = max - min;
+    double result = ((value + 1.0) / 2.0) * mid + min;
+    return result;
+}

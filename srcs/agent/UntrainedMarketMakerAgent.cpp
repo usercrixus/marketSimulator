@@ -1,18 +1,18 @@
-// --- srcs/agent/MarketMakerAgent.cpp ---
+// --- srcs/agent/UntrainedMarketMakerAgent.cpp ---
 #include <torch/torch.h>
-#include "MarketMakerAgent.hpp"
+#include "UntrainedMarketMakerAgent.hpp"
 #include "../statistics/Statistics.hpp"
 #include "../market/Market.hpp"
 #include <algorithm>
 
-MarketMakerAgent::MarketMakerAgent()
+UntrainedMarketMakerAgent::UntrainedMarketMakerAgent()
     : Agent(), model(4, 2)
 {
     model.to(device, torch::kFloat32);
     optimizer_ = std::make_unique<torch::optim::Adam>(model.parameters(), 1e-4);
 }
 
-at::Tensor MarketMakerAgent::buildInputTensor(Statistics &statistics)
+at::Tensor UntrainedMarketMakerAgent::buildInputTensor(Statistics &statistics)
 {
     const auto &midDeque = statistics.getMidPrices();
     const auto &bidDeque = statistics.getBestBids();
@@ -39,7 +39,7 @@ at::Tensor MarketMakerAgent::buildInputTensor(Statistics &statistics)
     return input;
 }
 
-void MarketMakerAgent::manageOrder(Market &market, double quantity, double bidPrice, double askPrice)
+void UntrainedMarketMakerAgent::manageOrder(Market &market, double quantity, double bidPrice, double askPrice)
 {
     bool shouldBuy = true;
     bool shouldSell = true;
@@ -72,7 +72,7 @@ void MarketMakerAgent::manageOrder(Market &market, double quantity, double bidPr
     }
 }
 
-void MarketMakerAgent::onStep(Statistics &statistics, Market &market)
+void UntrainedMarketMakerAgent::onStep(Statistics &statistics, Market &market)
 {
     auto input = buildInputTensor(statistics);
     auto out = model.forward(input);
@@ -95,31 +95,12 @@ void MarketMakerAgent::onStep(Statistics &statistics, Market &market)
     manageOrder(market, quantity, bidPrice, askPrice);
 }
 
-void MarketMakerAgent::onEndStep(Statistics &statistics)
+void UntrainedMarketMakerAgent::onEpoch(Statistics &statistics)
 {
     (void)statistics;
-}
-
-void MarketMakerAgent::onEpoch(Statistics &statistics)
-{
-    double reward;
-    if (!isUpdated)
-        reward = -1000; // If the agent never actually placed anything in any of the 100 steps,
-    else
-    {
-        // 1) Compute final mid‐price (from the last snapshot)
-        const auto &mids = statistics.getMidPrices();
-        double finalMid = mids.back();
-        // 2) Compute new net‐worth = cash + inventory * finalMid
-        double newNet = cash + inventory * finalMid;
-        // 3) Reward is the difference over the last epoch:
-        reward = newNet - prevNetValue;
-    }
-    torch::Tensor totalLoss = torch::zeros({1}, torch::kFloat32);
-    for (auto &stepLogits : outputHistory)
-        totalLoss += -static_cast<float>(reward) * stepLogits.sum();
-    optimizer_->zero_grad();
-    totalLoss.backward();
-    optimizer_->step();
     outputHistory.clear();
+}
+void UntrainedMarketMakerAgent::onEndStep(Statistics &statistics)
+{
+    (void)statistics;
 }

@@ -1,5 +1,5 @@
 # Flags
-MYFLAGS = -std=c++17 -g -Wall -Wextra -Werror
+MYFLAGS = -std=c++17 -O3 -march=native -Wall -Wextra -Werror
 SYSFLAGS = -isystem srcs/externalLibrary/libtorch/include -isystem srcs/externalLibrary/libtorch/include/torch/csrc/api/include -Isrcs/externalLibrary/nlohmann 
 # Linking
 LDFLAGS = -Lsrc/externalLibrary/nlohmann -Lsrcs/externalLibrary/libtorch/lib -Wl,-rpath=srcs/externalLibrary/libtorch/lib
@@ -9,6 +9,7 @@ SRC = \
 	srcs/statistics/Statistics.cpp \
 	srcs/agent/Agent.cpp \
 	srcs/agent/MarketMakerAgent.cpp \
+	srcs/agent/UntrainedMarketMakerAgent.cpp \
 	srcs/agent/TakerAgent.cpp \
 	srcs/agent/models/ModelLSTM.cpp \
 	srcs/market/Market.cpp \

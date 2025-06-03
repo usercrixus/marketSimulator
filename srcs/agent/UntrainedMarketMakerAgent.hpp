@@ -1,4 +1,4 @@
-// --- srcs/agent/MarketMakerAgent.hpp ---
+// --- srcs/agent/UntrainedMarketMakerAgent.hpp ---
 #pragma once
 
 #include <torch/torch.h>
@@ -9,9 +9,9 @@
 class Order;
 class Market;
 
-class MarketMakerAgent : public Agent {
+class UntrainedMarketMakerAgent : public Agent {
 public:
-    MarketMakerAgent();
+    UntrainedMarketMakerAgent();
     // build input 1d tensor from statistics deque
     at::Tensor buildInputTensor(Statistics &statistics);
     // manage market maker limit order (modify or set)
@@ -19,9 +19,9 @@ public:
     // Called every sub‐step (100 times per mini‐market)
     void onStep(Statistics &statistics, Market &market) override;
     // Called every sub‐step (100 times per mini‐market)
-    void onEndStep(Statistics &statistics) override;
-    // Called every sub‐step (100 times per mini‐market)
     void onEpoch(Statistics &statistics) override;
+    // Called every sub‐step (100 times per mini‐market)
+    void onEndStep(Statistics &statistics) override;
 
 private:
     ModelLSTM model;

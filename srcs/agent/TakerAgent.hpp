@@ -17,8 +17,11 @@ class TakerAgent : public Agent
 public:
 	TakerAgent();
 
-	void onEpoch(Statistics &statistics, Market &market) override;
-	void onReward(Statistics &statistics) override;
+	void onStep(Statistics &statistics, Market &market) override;
+    // Called every sub‐step (100 times per mini‐market)
+    void onEpoch(Statistics &statistics) override;
+    // Called every sub‐step (100 times per mini‐market)
+    void onEndStep(Statistics &statistics) override;
 
 private:
 	ModelLSTM model;

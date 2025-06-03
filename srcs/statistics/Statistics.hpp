@@ -24,6 +24,7 @@ private:
 
 public:
     static std::vector<double> normalizeDeque(const std::deque<double> &data);
+    static double unNormalize(double value, double max, double min);
 
     Statistics();
     ~Statistics();
