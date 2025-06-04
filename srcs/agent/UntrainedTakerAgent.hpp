@@ -17,11 +17,9 @@ class UntrainedTakerAgent : public Agent
 public:
 	UntrainedTakerAgent();
 
-	void onStepBegin(Statistics &statistics, Market &market) override;
+	void onStepBegin(Market &market) override;
     // Called every sub‐step (100 times per mini‐market)
-    void onEpoch(Statistics &statistics) override;
-    // Called every sub‐step (100 times per mini‐market)
-    void onEndStep(Statistics &statistics) override;
+    void onEpoch(const Statistics &statistics) override;
 
 private:
 	ModelLSTM model;

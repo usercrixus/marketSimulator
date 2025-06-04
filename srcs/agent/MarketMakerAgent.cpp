@@ -4,6 +4,7 @@
 #include "../statistics/Statistics.hpp"
 #include "../market/Market.hpp"
 #include <algorithm>
+#include <random>
 
 MarketMakerAgent::MarketMakerAgent()
     : Agent(), model(4, 2), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU)
@@ -12,7 +13,7 @@ MarketMakerAgent::MarketMakerAgent()
     optimizer_ = std::make_unique<torch::optim::Adam>(model.parameters(), 1e-4);
 }
 
-at::Tensor MarketMakerAgent::buildInputTensor(Statistics &statistics)
+at::Tensor MarketMakerAgent::buildInputTensor(const Statistics &statistics)
 {
     const auto &midDeque = statistics.getMidPrices();
     const auto &bidDeque = statistics.getBestBids();
@@ -72,8 +73,9 @@ void MarketMakerAgent::manageOrder(Market &market, double quantity, double bidPr
     }
 }
 
-void MarketMakerAgent::onStepBegin(Statistics &statistics, Market &market)
+void MarketMakerAgent::onStepBegin(Market &market)
 {
+    const Statistics &statistics = market.getStatistics();
     auto input = buildInputTensor(statistics);
     auto out = model.forward(input);
     outputHistory.push_back(out);
@@ -95,12 +97,7 @@ void MarketMakerAgent::onStepBegin(Statistics &statistics, Market &market)
     manageOrder(market, quantity, bidPrice, askPrice);
 }
 
-void MarketMakerAgent::onEndStep(Statistics &statistics)
-{
-    (void)statistics;
-}
-
-void MarketMakerAgent::onEpoch(Statistics &statistics)
+void MarketMakerAgent::onEpoch(const Statistics &statistics)
 {
     double reward;
     if (!isUpdated)
@@ -114,6 +111,8 @@ void MarketMakerAgent::onEpoch(Statistics &statistics)
         double newNet = cash + inventory * finalMid;
         // 3) Reward is the difference over the last epoch:
         reward = newNet - prevNetValue;
+        if (reward == 0)
+            reward = -10;
     }
     torch::Tensor totalLoss = torch::zeros(
         {1},

@@ -1,0 +1,1 @@
+#define SNAPSHOT_LEN 100

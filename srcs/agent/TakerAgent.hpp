@@ -16,12 +16,12 @@ class TakerAgent : public Agent
 {
 public:
 	TakerAgent();
-
-	void onStepBegin(Statistics &statistics, Market &market) override;
+    // build input 1d tensor from statistics deque
+    at::Tensor buildInputTensor(const Statistics &statistics);
+	void onStepBegin(Market &market) override;
     // Called every sub‐step (100 times per mini‐market)
-    void onEpoch(Statistics &statistics) override;
-    // Called every sub‐step (100 times per mini‐market)
-    void onEndStep(Statistics &statistics) override;
+    void onEpoch(const Statistics &statistics) override;
+    void reward(const Statistics &statistics);
 
 private:
 	ModelLSTM model;

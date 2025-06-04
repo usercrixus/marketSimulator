@@ -3,6 +3,7 @@
 #include "../statistics/Statistics.hpp"
 #include "../market/Market.hpp"
 #include <algorithm>
+#include <random>
 
 UntrainedTakerAgent::UntrainedTakerAgent()
     : Agent(), model(4, 3), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU)
@@ -11,8 +12,10 @@ UntrainedTakerAgent::UntrainedTakerAgent()
     optimizer_ = std::make_unique<torch::optim::Adam>(model.parameters(), 1e-4);
 }
 
-void UntrainedTakerAgent::onStepBegin(Statistics &statistics, Market &market)
+void UntrainedTakerAgent::onStepBegin(Market &market)
 {
+    const Statistics &statistics = market.getStatistics();
+
     const auto &midDeque = statistics.getMidPrices();
     const auto &bidDeque = statistics.getBestBids();
     const auto &askDeque = statistics.getBestAsks();
@@ -73,13 +76,7 @@ void UntrainedTakerAgent::onStepBegin(Statistics &statistics, Market &market)
     }
 }
 
-void UntrainedTakerAgent::onEndStep(Statistics &statistics)
-{
-    (void)statistics;
-    // do nothing
-}
-
-void UntrainedTakerAgent::onEpoch(Statistics &statistics)
+void UntrainedTakerAgent::onEpoch(const Statistics &statistics)
 {
     (void)statistics;
     // do nothing

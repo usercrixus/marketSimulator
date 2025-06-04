@@ -3,6 +3,7 @@
 #include "../statistics/Statistics.hpp"
 #include "../market/Market.hpp"
 #include <algorithm>
+#include <random>
 
 TakerAgent::TakerAgent()
     : Agent(), model(4, 3), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU)
@@ -11,17 +12,13 @@ TakerAgent::TakerAgent()
     optimizer_ = std::make_unique<torch::optim::Adam>(model.parameters(), 1e-4);
 }
 
-void TakerAgent::onStepBegin(Statistics &statistics, Market &market)
+at::Tensor TakerAgent::buildInputTensor(const Statistics &statistics)
 {
     const auto &midDeque = statistics.getMidPrices();
     const auto &bidDeque = statistics.getBestBids();
     const auto &askDeque = statistics.getBestAsks();
     const auto &spdDeque = statistics.getSpreads();
 
-    if (midDeque.size() < 100 || bidDeque.size() < 100 || askDeque.size() < 100 || spdDeque.size() < 100)
-        return;
-
-    // Normalize each deque to [-1,1]
     std::vector<double> normMid = Statistics::normalizeDeque(midDeque);
     std::vector<double> normBids = Statistics::normalizeDeque(bidDeque);
     std::vector<double> normAsks = Statistics::normalizeDeque(askDeque);
@@ -37,15 +34,18 @@ void TakerAgent::onStepBegin(Statistics &statistics, Market &market)
         flat_data.push_back(static_cast<float>(normSpd[t]));
     }
 
-    auto seq100x4 = torch::tensor(
-                        flat_data,
-                        torch::TensorOptions().dtype(torch::kFloat32).device(device))
-                        .view({100, 4});
-    auto input = seq100x4.unsqueeze(0); // shape [1, 100, 4]
+    auto seq100x4 = torch::tensor(flat_data, torch::TensorOptions().dtype(torch::kFloat32).device(device)).view({100, 4});
+    auto input = seq100x4.unsqueeze(0);
+    return input;
+}
 
+void TakerAgent::onStepBegin(Market &market)
+{
+    const Statistics &statistics = market.getStatistics();
+    reward(statistics);
+    auto input = buildInputTensor(statistics);
     auto logits = model.forward(input);
     lastOut = logits.cpu();
-    isUpdated = true;
 
     auto probs = torch::softmax(logits, 1);
     int action_idx = std::get<1>(probs.max(1)).item<int>();
@@ -73,7 +73,7 @@ void TakerAgent::onStepBegin(Statistics &statistics, Market &market)
     }
 }
 
-void TakerAgent::onEndStep(Statistics &statistics)
+void TakerAgent::reward(const Statistics &statistics)
 {
     if (!isUpdated)
         return;
@@ -98,7 +98,7 @@ void TakerAgent::onEndStep(Statistics &statistics)
     optimizer_->step();
 }
 
-void TakerAgent::onEpoch(Statistics &statistics)
+void TakerAgent::onEpoch(const Statistics &statistics)
 {
     (void)statistics;
     // do nothing
