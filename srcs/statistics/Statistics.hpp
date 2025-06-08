@@ -12,14 +12,7 @@ class Statistics
 public:
     Statistics();
     ~Statistics();
-    /**
-     * Normalize a full deque container (for AI agent)
-     */
-    static std::vector<double> normalizeDeque(const std::deque<double> &data);
-    /**
-     * Unormalize a value
-     */
-    static double unNormalize(double value, double max, double min);
+
     /**
      * records the statistics from the orderbook last history
      */

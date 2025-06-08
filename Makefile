@@ -38,7 +38,7 @@ SRC := \
   srcs/agent/Agent.cpp \
   srcs/agent/MarketMakerAgent.cpp \
   srcs/agent/TakerAgent.cpp \
-  srcs/agent/UntrainedTakerAgent.cpp \
+  srcs/agent/ContrarianTakerAgent.cpp \
   srcs/agent/models/ModelLSTM.cpp \
   srcs/market/Market.cpp \
   srcs/market/Order.cpp \

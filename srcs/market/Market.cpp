@@ -90,13 +90,11 @@ void Market::run()
     for (_currentStep = 0; _currentStep < _totalSteps; ++_currentStep)
     {
         printStatus();
-
         std::vector<Agent *> shuffledAgents = _agents;
         std::shuffle(shuffledAgents.begin(), shuffledAgents.end(), gen);
-
         for (Agent *agent : shuffledAgents)
         {
-            agent->onStepBegin(*this);
+            agent->onStep(*this);
             std::vector<Order> ordersToProcess;
             ordersToProcess.swap(_orders[_currentStep]);
             for (Order &order : ordersToProcess)
@@ -106,7 +104,7 @@ void Market::run()
         }
     }
     for (Agent *agentPtr : _agents)
-        agentPtr->onEpoch(_statistics);
+        agentPtr->onEpoch(*this);
 }
 
 const OrderBook &Market::getOrderBook() const

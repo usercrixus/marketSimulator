@@ -1,11 +1,9 @@
-// --- srcs/agent/Agent.cpp ---
 #include "Agent.hpp"
 #include "../market/Order.hpp"
 
 Agent::Agent()
     : cash(100000.0),
       inventory(0.0),
-      prevNetValue(100000.0),
       isUpdated(false)
 {
 }
@@ -48,7 +46,6 @@ void Agent::reset()
 {
     cash = 100000.0;
     inventory = 0.0;
-    prevNetValue = 100000.0;
     isUpdated = false;
     pendingsOrders.clear();
 }
